@@ -364,7 +364,7 @@ The same function as _tabular.ginline()_, except that the second return value of
 
 **local class = require "geneas.class"**
 
-Implements a simple class/object infrastructure.
+Implements a simple class/object infrastructure. See modules xpm.lua and mpi.lua for examples of usage.
 
 *class(cls)*
 
@@ -374,7 +374,7 @@ Methods of class objects should be specified in a sub-table __index.
 
 If the table contains a function entry _init_ then this function will be called when objects of the class are created. 
 
-After the class has been registered objects of this class can be created by calling the class object with an optional parameters, which will be passed to the init function (if any). If a class has no init function then the class object must be called with a table, which will be converted directly into the object.
+After the class has been registered objects of this class can be created by calling the class object. Any parameters will be passed to the init function (if any). If a class has no init function then the class object must be called with a table as parameter, which will be converted directly into the object.
 
 The init function is called with an object of the class as first parameter, followed by all arguments to the call to the class object. The first parameter is an empty object unless the first argument of the call is a simple table (ie not an object), in which case this table is converted into an object (by setting its metatable) and passed as the first parameter.
 
