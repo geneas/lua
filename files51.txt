@@ -1,0 +1,14 @@
+#
+# list of files to install for lua 5.1
+#
+dump.lua
+dprint.lua
+getopt.lua
+export.lua
+class.lua
+tabular.lua
+camel.lua
+xpm.lua
+mpi.lua:mpi51.lua
+#
+init.lua
