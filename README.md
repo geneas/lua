@@ -7,9 +7,9 @@ __Lua utility library__
 
 **require "geneas.dprint"**
 
-Installs a family of global functions which conditionally generate output (like print) depending
+Installs a family of global functions d[n]print which conditionally generate output (like print) depending
 on the value of the global numerical variable 'debug_level' (which is initialized to 0). Thus for example d2print(...) only produces output
-if the value of debug_level is 2 or greater.
+if the value of debug_level is 2 or greater. The function dprint generates output if debug_level is non-zero.
 
 In addition, a global function printf is installed which prints the output of string.format. A
 similar family of d[n]printf functions is also installed which check the value of debug_level.
@@ -251,7 +251,7 @@ The contents of the mask table can be retrieved by calling the unification with 
 
 The _flags_ parameter may be a table of key-value pairs or a string of comma-separated flag specifications. If flags is a number it is interpreted as the value of maxdepth. If flags is a boolean then it is interpreted as the value of writable.
 
-Caveat: when using lua versions < 5.3, iteration over unifications using *pairs()* will not work out of the box, since the *\_\_pairs* metamethod is not recognized. To enable iteration over unified tables in Lua 5.1 & 5.2 the global *pairs* function should be replaced by the function *tabular.upairs* (\_G.pairs = tabular.upairs).
+Caveat: when using Lua 5.1, iteration over unifications using *pairs()* will not work out of the box, since the *\_\_pairs* metamethod is not recognized. To enable iteration over unified tables in Lua 5.1 the global *pairs* function should be replaced by the function *tabular.upairs* (\_G.pairs = tabular.upairs).
 
 Example:
 
@@ -263,6 +263,9 @@ Example:
     t.a = 5
     t.c = nil -- now x = { a = 5 } and t.c = nil
     t("mask") -- -> { c = NIL }
+
+Note: to display the contents of a unification using the _dump_ function (see above) the 'cooked' flag must be set, and optionally 'nometa' to hide the machinery.
+
 
 *tabular.upairs(t)*
 
@@ -361,7 +364,7 @@ The same function as _tabular.ginline()_, except that the second return value of
 
 **local class = require "geneas.class"**
 
-Implements a class/object infrastructure similar to C++/Java classes.
+Implements a simple class/object infrastructure.
 
 *class(cls)*
 
@@ -373,15 +376,19 @@ If the table contains a function entry _init_ then this function will be called 
 
 After the class has been registered objects of this class can be created by calling the class object with an optional parameters, which will be passed to the init function (if any). If a class has no init function then the class object must be called with a table, which will be converted directly into the object.
 
-The init function is called with an object as first parameter, followed by all arguments to the call to the class object. The first parameter is an empty object unless the first argument of the call is a simple table (ie not an object), in which case it is converted into an object (by setting its metatable) and passed as the first parameter.
+The init function is called with an object of the class as first parameter, followed by all arguments to the call to the class object. The first parameter is an empty object unless the first argument of the call is a simple table (ie not an object), in which case this table is converted into an object (by setting its metatable) and passed as the first parameter.
 
-*class.type(obj)*
+The init function may return the already created object or a new table. In the latter case the original object is deleted and the returned table is converted to an object by setting its metatable. A nil return value is equivalent to returning the original object.
 
-Returns the type of _obj_ as a string. If _obj_ is not a member of a class created by this module then the value of the global function _type(obj)_ is returned. If it is an object created by this module then the name of the class (cls.name) prefixed by "class " is requrned. If it is a class object then "class class" is returned.
+This allows the init function to perform initialization and/or checking of the parameters according to the requirements of the class.
 
 *class.classof(obj)*
 
 If _obj_ is a member of a class created by this module then this function returns its class object (ie, metatable), otherwise returns nil.
+
+*class.type(obj)*
+
+Returns the type of _obj_ as a string. If _class.classof(obj)_ returns nil (ie the object is not a member of a class created by this module) then the value of the global function _type(obj)_ is returned. Otherwise the name of the class (cls.name) prefixed by "class " is returned. If it is a class object then "class class" is returned.
 
 
 ### xpm.lua

@@ -1,5 +1,5 @@
 #
-# list of files to install for lua 5.1
+# list of files to install for lua 5.1/5.2
 #
 dump.lua
 dprint.lua
