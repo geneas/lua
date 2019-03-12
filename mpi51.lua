@@ -42,8 +42,11 @@ local byte = string.byte
 local char = string.char
 
 local type = _G.type
+local error = _G.error
 local ipairs = _G.ipairs
 local select = _G.select
+local tonumber = _G.tonumber
+local tostring = _G.tostring
 
 local _band, _bor, _bxor, _bshl, _bshr
 
@@ -54,6 +57,12 @@ if have_bit32 then
 	_bxor = bit32.bxor
 	_bshl = bit32.bshl
 	_bshr = bit32.bshr
+else
+	_band = function() error "mpi: bit operations not available" end
+	_bor = _band
+	_bxor = _band
+	_bshl = _band
+	_bshr = _band
 end
 
 --[[--------------------------------------------------
@@ -916,7 +925,7 @@ function isqrt(m)
 	if #m == 0 then return _mpi() end
 	
 	local u = sigplaces(m)
-	local w = digit_width * 2 - (u % 1)	-- ensure that pos will be even
+	local w = digit_width * 2 - (u % 2)	-- ensure that pos will be even
 	local msu, pos = extract(m, -w)
 	local x, x0 = shl((ceil(sqrt(msu + 1))), floor(pos / 2))
 	

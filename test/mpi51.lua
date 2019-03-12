@@ -30,7 +30,7 @@ end
 local mpi = require "geneas.mpi"
 
 if decimal then
-	mpi.setconfig { setdigit = -9, separator = "" }
+	mpi.setconfig { setdigit = -7, separator = "" }
 end
 mpi.setconfig { paranoid = true }
 

@@ -29,7 +29,8 @@ local debug_level
 while true do
 	local a = table.remove(arg, 1)
 	
-	if a == "-z" then debug_level = true
+	if not a then break
+	elseif a == "-z" then debug_level = true
 	elseif a:match"-m" then
 		local mapfile = a:match"-m(.*)"
 		if	mapfile then
