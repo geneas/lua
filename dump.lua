@@ -25,8 +25,10 @@ local getmetatable = getmetatable
 local io = io
 local string_rep = string.rep
 local string_gsub = string.gsub
+local string_format = string.format
 local table_insert = table.insert
 local table_sort = table.sort
+local math_floor = math.floor
 
 local controlchars = {
 	["\0"]="0",
@@ -47,6 +49,9 @@ local controlchars = {
 --	header			header at start of dump (in table, or remainder of string option)
 -- align				align dump output with end of header column
 --	sort				sort table entries
+-- hexkey			display integer keys in hex
+-- hexval			display integer values in hex
+-- flat				single line format (no pretty-printing)
 --
 function _G.dump(var, flags)
 
@@ -62,6 +67,9 @@ function _G.dump(var, flags)
 	local header = opttab.header or (optstr:match"%f[%a]header=(.*)")
 	local sort = opttab.sort or (optstr:match"%f[%a]sort%f[%A]")
 	local align = opttab.align or (optstr:match"%f[%a]align%f[%A]")
+	local hexkey = opttab.hexkey or (optstr:match"%f[%a]hexkey%f[%A]")
+	local hexval = opttab.hexval or (optstr:match"%f[%a]hexval%f[%A]")
+	local flat = opttab.flat or (optstr:match"%f[%a]flat%f[%A]")
 	
 	if not writer then writer = io.write
 	elseif writer == true then writer = _G.debug_writer or io.write
@@ -94,10 +102,14 @@ function _G.dump(var, flags)
 		writer((string_gsub(s, "[^%w%p%s'\"\\]", function(c) return "\\"..(controlchars[c] or ("x%02x"):format(c:byte())) end)))
 	end
 	local function newline(str)
-		writer("\n")
-		if align then writer(align) end
-		for i = 1,level do
-			writer(indent)
+		if flat then
+			writer(",")
+		else
+			writer("\n")
+			if align then writer(align) end
+			for i = 1,level do
+				writer(indent)
+			end
 		end
 		if str then putstr(str) end
 	end
@@ -129,10 +141,16 @@ function _G.dump(var, flags)
 			level = level - 1
 		end
 	end
-		
+	
+	local function toxstring(v)
+		if type(v) == "number" and math_floor(v) == v then
+			return string_format("0x%X", v)
+		end
+		return tostring(v)
+	end
 	local function dump2(var, parent)
 		if type(var) == "string" then writer('"') end
-		putstr(tostring(var))
+		putstr(hexval and toxstring(var) or tostring(var))
 		if type(var) == "string" then writer('"') end
 		
 		if maxlev and level == maxlev then return end
@@ -153,9 +171,9 @@ function _G.dump(var, flags)
 			if type(var) == "table" then
 				local function dokey(key)
 					if type(key) == "string" then
-						newline("."..tostring(key).."=>")
+						newline("." .. tostring(key) .. "=>")
 					else
-						newline("["..tostring(key).."]=>")
+						newline("[" .. (hexkey and toxstring(key) or tostring(key)) .. "]=>")
 					end
 					
 					local value = get(var, key)

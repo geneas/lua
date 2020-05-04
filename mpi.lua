@@ -12,8 +12,8 @@
 local class = require "geneas.class"
 local classof = class.classof
 
-local tabular = require "geneas.tabular"
-local merge = tabular.merge
+local tabutil = require "geneas.tabutil"
+local merge = tabutil.merge
 
 local pow = math.pow
 local abs = math.abs

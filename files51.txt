@@ -3,9 +3,10 @@
 #
 dump.lua
 dprint.lua
-getopt.lua
 export.lua
+getopt.lua
 class.lua
+tabutil.lua
 tabular.lua
 camel.lua
 xpm.lua
