@@ -158,4 +158,4 @@ for _, dir in ipairs(dirs) do
 	end
 end
 	
-vprintf("installation failed")
+vprintf("installation failed (sudo?)")

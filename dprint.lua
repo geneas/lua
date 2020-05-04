@@ -25,7 +25,11 @@ local stdout = io.stdout
 _G.debug_level = _G.debug_level or 0
 
 function _G.setDebugLevel(n) if n then _G.debug_level = n end return debug_level end
+function _G.incDebugLevel() _G.debug_level = _G.debug_level + 1 end
+function _G.decDebugLevel() _G.debug_level = math.max(0, _G.debug_level - 1) end
 function _G.getDebugLevel() return _G.debug_level end
+function _G.setVerbose(t) _G.verbose = type(t) ~= "boolean" or t end
+function _G.getVerbose() return _G.verbose end
 
 local function _dprint(level, ...)
 	if _G.debug_level < level then return end
@@ -93,5 +97,5 @@ function _G.d5printf(s, ...)	_G.d5print(string.format(s, ...)) end
 function _G.d6printf(s, ...)	_G.d6print(string.format(s, ...)) end
 function _G.d7printf(s, ...)	_G.d7print(string.format(s, ...)) end
 
-function _G.vprint(...)	if verbose then _dprint(0, ...) end end
-function _G.vprintf(s, ...) if verbose then _dprint(0, string.format(s, ...)) end end
+function _G.vprint(...)	if _G.verbose then _dprint(0, ...) end end
+function _G.vprintf(s, ...) if _G.verbose then _dprint(0, string.format(s, ...)) end end

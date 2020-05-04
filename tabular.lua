@@ -18,7 +18,6 @@ if _VERSION:match"Lua 5%.[12]" then
 end
 
 require "geneas.dprint"
-require "geneas.dump"
 
 local format = string.format
 local insert = table.insert
@@ -32,7 +31,10 @@ g_metamode_k.__metatable = g_metamode_k
 g_metamode_v.__metatable = g_metamode_v
 g_metamode_kv.__metatable = g_metamode_kv
 
+local type = _G.type
 local pairs = _G.pairs
+local error = _G.error
+local tonumber = _G.tonumber
 
 -- general utility functions
 --
@@ -137,6 +139,16 @@ local function filter(t, f)
 		if f(v) then
 			insert(r, v)
 		end
+	end
+	return r
+end
+
+local function reverse(t)
+	local e = #t + 1
+	local r = {}
+	
+	for i = 1, e do
+		r[i] = t[e - i]
 	end
 	return r
 end
@@ -810,6 +822,7 @@ tabular.map					= map
 tabular.foldl				= foldl
 tabular.foldr				= foldr
 tabular.filter				= filter
+tabular.reverse			= reverse
 tabular.take				= take
 tabular.drop				= drop
 tabular.append				= append

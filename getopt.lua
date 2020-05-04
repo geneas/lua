@@ -58,7 +58,7 @@ function _G.getopt(args, spec, longspec)
 	local tlong
 	
 	for _,lo in ipairs(longspec) do
-		local name, par, rem = match(lo, "^([^=]*)(=?%??)(.-)$")
+		local name, par, rem = match(lo, "^([^=()]*)(=?%??)(.-)$")
 		local opt = rem == "" and name or substr((match(rem, "%b()") or ""), 2, -2)
 		
 		if opt == "" then error("getopt: invalid long spec: " .. lo) end

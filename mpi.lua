@@ -783,6 +783,13 @@ local function uminus(m)
 	return r
 end
 
+local function abs(m)
+	local r = _mpi(m)
+	
+	r.negative = nil
+	return r
+end
+
 -- bit operations
 
 local function band(m1, m2)
@@ -1017,6 +1024,7 @@ mpi.bor			= bor
 mpi.bxor			= bxor
 mpi.shl			= shl
 mpi.shr			= shr
+mpi.abs			= abs
 mpi.isqrt		= isqrt
 mpi.gcd			= gcd
 	

@@ -22,22 +22,22 @@ require "geneas.export"
 require "geneas.class"
 
 geneas.tabular		= require "geneas.tabular"
-geneas.strsplit	= require "geneas.strsplit"
+geneas.split		= require "geneas.split"
 geneas.camel		= require "geneas.camel"
 geneas.parser		= require "geneas.parser"
 
 geneas.region		= require "geneas.region"
 geneas.xml			= require "geneas.xml"
-geneas.xmlout		= require "geneas.xmlout"
-geneas.xmlparse	= require "geneas.xmlparse"
-geneas.xmlinfo		= require "geneas.xmlinfo"
 geneas.aatree		= require "geneas.aatree"
+
+geneas.id3			= require "geneas.id3"
+geneas.id4			= require "geneas.id4"
+geneas.mpi			= require "geneas.mpi"
 
 if not _VERSION:match"Lua 5%.[12]" then
 	--
 	-- only available for 5.3 and above atm
 	--
-	geneas.mpi		= require "geneas.mpi"
 	geneas.xpm		= require "geneas.xpm"
 end
 

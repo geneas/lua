@@ -70,6 +70,9 @@ end
 local function newclass(c, newcl)
 	assert(c == class)
 	
+	if type(newcl) == "string" then
+		newcl = { name = newcl }
+	end
 	setmetatable(newcl, class)
 	newcl.__metatable = newcl				-- lock metatable
 	return newcl
