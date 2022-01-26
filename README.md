@@ -610,6 +610,10 @@ _mpi.gcd(a, b)_
 
 Returns the greatest common divisor of a and b as an mpi object. a and b may be mpi objects or lua numbers.
 
+_mpi.factorial(x)_
+
+Returns x! as an mpi object. x must be convertible to an mpi object.
+
 _mpi.read(str, radix)_
 
 Convert str to an mpi object using the specified radix (2..36)
