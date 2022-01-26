@@ -42,7 +42,7 @@ local controlchars = {
 -- flags: an optional string or table containing option specifications:
 --	maxlev=<num>	maximum depth for nested tables
 --	indent=<num>	number of spaces or string (in table only) for indenting nested tables
---	expand			expand duplicated tables individually (caution!)
+--	expand			expand duplicated tables individually (caution - verbose!)
 --	cooked			dump using pairs(), otherwise next() (raw entries)
 --	nometa			do not show metatable
 --	writer			specify output function (fn, true => debug_writer, or name of global fn)

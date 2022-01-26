@@ -106,7 +106,7 @@ local function defcolour(this, colour, symbol)
 			end
 		end
 		colour = format('#%02X%02X%02X', floor(r + 0.5), floor(g + 0.5), floor(b + 0.5))
-	elseif type(colour) ~= "string" or not colour:match"#%x%x%x%x%x%x" then
+	elseif type(colour) ~= "string" then
 		error("XPM: invalid colour: " .. tostring(colour))
 	end
 	

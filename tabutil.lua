@@ -261,6 +261,33 @@ local function tcompare(t1, t2, depth)
 	return true
 end
 
+-- numeric cort
+local function numericlt(a, b)
+	--
+	-- numeric sort - numeric substrings are sorted in
+	-- numerical order rather than alphabetical order.
+	--
+	local function section(s)
+		local a, b, c = s:match"^(%D*)(%d*)(.*)$"
+		if a ~= "" then
+			return a, b .. c
+		else
+			return tonumber(b), c
+		end
+	end
+	local p, q, lt
+	
+	repeat
+		p, a = section(a)
+		q, b = section(b)
+		if type(p) ~= "number" or type(q) ~= "number" then
+			p, q = tostring(p), tostring(q)
+		end
+		lt = p < q
+	until p ~= q or (a == "" and b == "")
+	return lt
+end
+
 
 -- sorted pairs
 local function spairs(tbl, flags)
@@ -300,25 +327,7 @@ local function spairs(tbl, flags)
 					elseif type(b) == "number" then
 						lt = false
 					elseif numeric then
-						--
-						-- numeric sort - numeric substrings are sorted in
-						-- numerical order rather than alphabetical order.
-						--
-						local function section(s)
-							local a, b, c = s:match"^(%D*)(%d*)(.*)$"
-							if a ~= "" then
-								return a, b .. c
-							else
-								return b, c
-							end
-						end
-						local p, q
-						
-						repeat
-							p, a = section(a)
-							q, b = section(b)
-							lt = p < q
-						until p ~= q or (a == "" and b == "")
+						lt = numericlt(a, b)
 					else
 						lt = a < b
 					end
@@ -389,7 +398,7 @@ local function g2inline(iter, state, value)
 	return step()
 end
 
--- return iterator which yields all values in table
+-- return iterator which yields all values in array (no keys)
 local function ivalues(t)
 	local f, s, k, v = ipairs(t)
 	
@@ -423,7 +432,7 @@ tabutil.rotate				= rotate
 tabutil.comprehend		= comprehend
 
 tabutil.tcompare			= tcompare
-
+tabutil.numericlt			= numericlt
 tabutil.spairs				= spairs
 	
 tabutil.gtable				= gtable

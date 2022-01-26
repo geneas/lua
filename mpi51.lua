@@ -11,7 +11,6 @@
 
 local _G = _G
 
-
 local class = require "geneas.class"
 local classof = class.classof
 
@@ -931,7 +930,7 @@ end
 --
 
 -- calculate floor of square root using babylonian (heron's) method [wikipedia]
-function isqrt(m)
+local function isqrt(m)
 	if m.negative then error "mpi.isqrt: illegal operand" end
 	if #m == 0 then return _mpi() end
 	
@@ -952,7 +951,7 @@ function isqrt(m)
 end
 	
 -- calculate GCD
-function gcd(m1, m2)
+local function gcd(m1, m2)
 	if m1 < m2 then
 		m1, m2 = m2, m1
 	end
@@ -961,6 +960,12 @@ function gcd(m1, m2)
 	end 
 	return m1
 end
+
+-- calculate factorial
+local function factorial(x)
+	return eq(x, 1) and 1 or _mpi(x) * factorial(x - 1)
+end
+
 
 -- NB: this is called by the constructor function to initialize the object data
 --
@@ -1057,6 +1062,7 @@ mpi.shr			= shr
 mpi.abs			= abs
 mpi.isqrt		= isqrt
 mpi.gcd			= gcd
+mpi.factorial	= factorial
 	
 -- module configuration
 mpi.setdigit	= _setdigit

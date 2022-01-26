@@ -45,6 +45,9 @@ _data_ may be any lua data item including nil. _flags_ may be specified to contr
     header=<str>   specify a header to be printed at the start of the first line of the dump
     align          indent all lines of the dump to align them with the header
     sort[=<func>]  sort table entries alphanumerically, or using specified function
+    hexkey         display integer keys in hex
+    hexval         display integer values in hex
+    flat           single line format (no pretty-printing)
 
 Flags may be specified as a table or a string. If a table then each flag is a key with the associated value or _true_ for boolean flags. If a string then flags are comma separated groups of the form 'flag=value' or simply 'flag' for boolean flags.
 
@@ -110,44 +113,44 @@ Convert _s_ from camel-case to lower case underscore-separated format.
 
 
 
-### tabular.lua
+### tabutil.lua
 
-**local tabular = require "geneas.tabular"**
+**local tabutil = require "geneas.tabutil"**
 
-This module contains a number of useful functions for operating on tables:
+This module contains a number of utility functions for operating on tables:
 
 
-*tabular.mkentry(tab, key, def)*
+*tabutil.mkentry(tab, key, def)*
 
 Returns tab[key] if it exists, otherwise initializes tab[key] = def and returns it.
 
 
-*tabular.clone(t[, withmeta])*
+*tabutil.clone(t[, withmeta])*
 
 Creates a shallow (single-level) copy of a table including (optionally) the metatable.
 
 
-*tabular.merge(t1, t2)*
+*tabutil.merge(t1, t2)*
 
 Copies all entries from t2 to t1 (overwriting existing entries) and returns t1.
 
 
-*tabular.topup(t1, t2)*
+*tabutil.topup(t1, t2)*
 
 Copies all entries from t2 that are not already in t1 and returns t1.
 
 
-*tabular.remove(t1, t2)*
+*tabutil.remove(t1, t2)*
 
 Removes all keys from t1 that are present in t2, and returns t1.
 
 
-*tabular.keep(t1, t2)*
+*tabutil.keep(t1, t2)*
 
 Removes all keys from t1 that are not present in t2, and returns t1.
 
 
-*tabular.mapa(t, f)*
+*tabutil.mapa(t, f)*
 
 Constructs a new table with t[k]=f(v) for all k,v in pairs(t).
 
@@ -155,53 +158,53 @@ Constructs a new table with t[k]=f(v) for all k,v in pairs(t).
 **The following functions operate on arrays and ignore non-array keys:**
 
 
-*tabular.map(t, f)*
+*tabutil.map(t, f)*
 
 Constructs a new array containing t[i]=f(v) for all i,v in ipairs(t).
 
 
-*tabular.foldl(t, f, r)*
+*tabutil.foldl(t, f, r)*
 
 Returns f(...f(f(r, t[1]), t[2]), ...), t[n])...).
 
 
-*tabular.foldr(t, f, r)*
+*tabutil.foldr(t, f, r)*
 
 Returns f(t[1], f(t[2], f(... f(t[n], r)...).
 
 
-*tabular.filter(t, f)*
+*tabutil.filter(t, f)*
 
 Returns a new array containing all elements t[i] of t for which f(t[i]) tests true.
 
 
-*tabular.take(t, n)*
+*tabutil.take(t, n)*
 
 Returns an array containing the first _n_ elements of t.
 
 
-*tabular.drop(t, n)*
+*tabutil.drop(t, n)*
 
-Returns an array containing all but the first _n_ elements of
-t.
+Returns an array containing all but the first _n_ elements of t.
 
 
-*tabular.append(t1, t2)*
+*tabutil.append(t1, t2)*
 
 Appends all elements of t2 to t1 and returns t1.
 
 
-*tabular.rotate(t, n)*
+*tabutil.rotate(t, n)*
 
 Rotate all elements of _t n_ places to the left (towards lower indices) and return t.
 
 Example:
 
-    tabular.rotate({1, 2, 3, 4, 5, 6, 7}, 2) -> {3, 4, 5, 6, 7, 1, 2}
+    tabutil.rotate({1, 2, 3, 4, 5, 6, 7}, 2) -> {3, 4, 5, 6, 7, 1, 2}
+
 
 **Complex functions:**
 
-*tabular.comprehend(ts, f)*
+*tabutil.comprehend(ts, f)*
 
 Generates a list of all combinations of the elements of the arrays found in _ts_.
 If _f_ is specified then it is called for each such combination and the result of the function call (if
@@ -212,7 +215,7 @@ highest numerical key change fastest, those of non-numerical keys change slowest
 
 Example:
 
-    tabular.comprehend { {1, 2}, {4, 5}, a = {7, 8} }
+    tabutil.comprehend { {1, 2}, {4, 5}, a = {7, 8} }
     -->
     {
         {1, 4, a = 7},
@@ -225,12 +228,69 @@ Example:
         {2, 5, a = 8}
     }
 
-*tabular.tcompare(t1, t2[, depth])*
+*tabutil.tcompare(t1, t2[, depth])*
 
 Compares two tables for equality of contents to a specified depth. All non-table entries are compared for exact equality; no conversions are performed.
 
 Down to the specified depth, tables are considered equal if their contents are equal (according
 to tcompare). At the depth limit tables are only equal if they are the same table.
+
+
+*tabutil.numericlt(a, b)*
+
+Performs numeric comparison of strings a and b. Strings of decimal digits within the strings are compared
+according to their numeric value rather than string value.
+Returns true if a < b.
+
+*tabutil.spairs(t, flags)*
+
+Sorted pairs. Performs the same function as pairs (but slower of course) except that
+the keys are sorted and optionally filtered. Direction of sorting can be selected.
+By default the keys are sorted using '<'; a different comparison function can be
+supplied.
+
+
+*tabutil.gtable(iter, state, value)*
+
+Returns a table containing all values (first return value only) generated by the iterator function iter, called as iter(state, value).
+
+Example:
+
+    tabutil.gtable(string.gmatch("abc def,   ghi", "%a+"))
+    -->
+    {"abc", "def", "ghi"}
+
+
+*tabutil.g2table(iter, state, value)*
+
+The same function as _tabutil.gtable()_, except that the second return value of the iterator function is collected.
+
+*tabutil.ginline(iter, state, value)*
+
+Returns inline all values (first return value only) generated by the iterator function iter, called as iter(state, value).
+
+Example:
+
+    tabutil.ginline(string.gmatch("abc def,   ghi", "%a+"))
+    -->
+    "abc" "def" "ghi"
+
+*tabutil.g2inline(iter, state, value)*
+
+The same function as _tabutil.ginline()_, except that the second return value of the iterator function is collected.
+
+
+*tabutil.ivalues(t)
+
+Returns all values in array t (like ipairs, but without the keys).
+
+
+
+### tabular.lua
+
+**local tabular = require "geneas.tabular"**
+
+This module contains some high-level table operations:
 
 
 *tabular.unify(ts[, flags])*
@@ -315,49 +375,11 @@ depth (or no limit if not specified). If a selector is specified then only those
 selector are returned. Keys which are neither strings nor numbers are ignored.
 
 
-*tabular.spairs(t, flags)*
-
-Sorted pairs. Performs the same function as pairs (but slower of course) except that
-the keys are sorted and optionally filtered. Direction of sorting can be selected.
-By default the keys are sorted using '<'; a different comparison function can be
-supplied.
-
-
 *tabular.deepcopy(t, map, ctrl)*
 
 Returns a deep copy of t. The depth of copy may be limited and a mapping table between
 the original items and the copies is generated; this may be passed to a later call so
 that the mapping can be reproduced.
-
-
-*tabular.gtable(iter, state, value)*
-
-Returns a table containing all values (first return value only) generated by the iterator function iter, called as iter(state, value).
-
-Example:
-
-    tabular.gtable(string.gmatch("abc def,   ghi", "%a+"))
-    -->
-    {"abc", "def", "ghi"}
-
-
-*tabular.g2table(iter, state, value)*
-
-The same function as _tabular.gtable()_, except that the second return value of the iterator function is collected.
-
-*tabular.ginline(iter, state, value)*
-
-Returns inline all values (first return value only) generated by the iterator function iter, called as iter(state, value).
-
-Example:
-
-    tabular.ginline(string.gmatch("abc def,   ghi", "%a+"))
-    -->
-    "abc" "def" "ghi"
-
-*tabular.g2inline(iter, state, value)*
-
-The same function as _tabular.ginline()_, except that the second return value of the iterator function is collected.
 
 
 ### class.lua

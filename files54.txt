@@ -1,0 +1,15 @@
+#
+# list of files to install for lua 5.3
+#
+dump.lua
+dprint.lua
+export.lua
+getopt.lua
+class.lua
+tabutil.lua
+tabular.lua
+camel.lua
+xpm.lua
+mpi.lua
+#
+init.lua

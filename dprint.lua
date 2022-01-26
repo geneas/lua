@@ -6,7 +6,7 @@
 |  Created:    17:04:11  13 Aug  2005                                      |
 |  Author:     Andrew Cannon <ajc@gmx.net>                                 |
 |                                                                          |
-|  Copyright(c) 2005-2019 Andrew Cannon                                    |
+|  Copyright(c) 2005-2021 Andrew Cannon                                    |
 |  Licensed under the terms of the MIT License                             |
 |                                                                          |
 ]]--------------------------------------------------------------------------
@@ -18,6 +18,11 @@ end
 local date = os.date
 local concat = table.concat
 local insert = table.insert
+local format = string.format
+local gmatch = string.gmatch
+local match = string.match
+local sub = string.sub
+local rep = string.rep
 local write = io.write
 local flush = io.flush
 local stdout = io.stdout
@@ -31,19 +36,17 @@ function _G.getDebugLevel() return _G.debug_level end
 function _G.setVerbose(t) _G.verbose = type(t) ~= "boolean" or t end
 function _G.getVerbose() return _G.verbose end
 
-local function _dprint(level, ...)
-	if _G.debug_level < level then return end
-	
+local function _print(...)
 	local out = {}
 	local pad = ""
 	local dlm
 	
 	for _, s in ipairs {...} do
 		if not dlm and _G.debug_header then
-			dlm = date(_G.debug_header:gsub("%%[%@%?]", { ["%@"] = level, ["%?"] = _G.debug_level }))
-			pad = string.rep(' ', #dlm)
+			dlm = date(gsub(_G.debug_header, "%%[%@%?]", { ["%@"] = level, ["%?"] = _G.debug_level }))
+			pad = rep(' ', #dlm)
 		end
-		for line, eol in tostring(s):gmatch"([^\n]*)(\n*)" do
+		for line, eol in gmatch(tostring(s), "([^\n]*)(\n*)") do
 			if dlm then
 				insert(out, dlm)
 				dlm = nil
@@ -58,7 +61,11 @@ local function _dprint(level, ...)
 		end
 		dlm = dlm or "\t"
 	end
-	insert(out, '\n')
+	if #out > 0 and match(out[#out], "\b$") then
+		out[#out] = sub(out[#out], 1, -2)
+	else
+		insert(out, '\n')
+	end
 	
 	local msg = concat(out, "")
 	
@@ -70,10 +77,29 @@ local function _dprint(level, ...)
 	end
 end
 
---function _G.print(...)	-- ? not always desirable!
---	_dprint(0, arg)
---end
+local function _dprint(level, ...)
+	if _G.debug_level >= level then _print(...) end
+end
 
+-- formatted output
+local function _printf(s, ...)
+	_print(format(s, ...))
+end
+
+local function _dprintf(level, s, ...)
+	if _G.debug_level >= level then _printf(s, ...) end
+end
+	
+	
+-- API	
+------
+
+-- override global print?
+--_G.print = _print	-- ? not always desirable!
+
+_G.printf =	_printf
+
+-- debug fns
 function _G.d0print(...)	_dprint(0, ...)		end
 function _G.d1print(...)	_dprint(1, ...)		end
 function _G.d2print(...)	_dprint(2, ...)		end
@@ -83,19 +109,23 @@ function _G.d5print(...)	_dprint(5, ...)		end
 function _G.d6print(...)	_dprint(6, ...)		end
 function _G.d7print(...)	_dprint(7, ...)		end
 
+function _G.d0printf(s, ...)	_dprintf(0, s, ...) end
+function _G.d1printf(s, ...)	_dprintf(1, s, ...) end
+function _G.d2printf(s, ...)	_dprintf(2, s, ...) end
+function _G.d3printf(s, ...)	_dprintf(3, s, ...) end
+function _G.d4printf(s, ...)	_dprintf(4, s, ...) end
+function _G.d5printf(s, ...)	_dprintf(5, s, ...) end
+function _G.d6printf(s, ...)	_dprintf(6, s, ...) end
+function _G.d7printf(s, ...)	_dprintf(7, s, ...) end
+
 -- for compatibility
-_G.dprint = d1print
+_G.dprint = _G.d1print
+_G.dprintf = _G.d1printf
 
+-- verbose fns
+function _G.vprint(...)	if _G.verbose then _print(...) end end
+function _G.vprintf(s, ...) if _G.verbose then _printf(s, ...) end end
 
-function _G.printf(s, ...)	_G.print(string.format(s, ...)) end
-function _G.dprintf(s, ...)	_G.dprint(string.format(s, ...)) end
-function _G.d1printf(s, ...)	_G.d1print(string.format(s, ...)) end
-function _G.d2printf(s, ...)	_G.d2print(string.format(s, ...)) end
-function _G.d3printf(s, ...)	_G.d3print(string.format(s, ...)) end
-function _G.d4printf(s, ...)	_G.d4print(string.format(s, ...)) end
-function _G.d5printf(s, ...)	_G.d5print(string.format(s, ...)) end
-function _G.d6printf(s, ...)	_G.d6print(string.format(s, ...)) end
-function _G.d7printf(s, ...)	_G.d7print(string.format(s, ...)) end
-
-function _G.vprint(...)	if _G.verbose then _dprint(0, ...) end end
-function _G.vprintf(s, ...) if _G.verbose then _dprint(0, string.format(s, ...)) end end
+-- error fn
+local _error = _G.error
+function _G.errorf(s, ...) _error(format(s, ...)) end

@@ -22,7 +22,7 @@ local pairs = _G.pairs
 local tostring = _G.tostring
 local getmetatable = _G.getmetatable
 local setmetatable = _G.setmetatable
-local assert = _G.assert or function(p) if not p then error "assertion failed" end end
+local assert = _G.assert or function(p) if not p then error("assertion failed", 2) end end
 
 -- class class
 --------------
@@ -37,11 +37,11 @@ local assert = _G.assert or function(p) if not p then error "assertion failed" e
 	         H 
 	         \==> ---------------
 	class:        | name=<...>  |
-	(operations   |             |
-	 & statics)   |             |    class
+	(operations   | init:fn     |
+	 & statics)   |             |    class (singleton)
 	              |       [meta]|==> ------------
-	         /----|__index(opt) |    |    __call|--> newobject()
-	         |    ---------------    |          |
+	         /----|__index      |    |    __call|--> newobject()
+	         \..> ---------------    |          |
 	         |                       |          |    classmeta
 	         |                       |    [meta]|==> -----------
 	         \--> ---------------    ------------    |         |
@@ -74,7 +74,8 @@ local function newclass(c, newcl)
 		newcl = { name = newcl }
 	end
 	setmetatable(newcl, class)
-	newcl.__metatable = newcl				-- lock metatable
+	newcl.__metatable = newcl					-- lock metatable
+	newcl.__index = newcl.__index or newcl	-- default to methods in class object
 	return newcl
 end
 
@@ -90,12 +91,12 @@ local function newobject(cls, p, ...)
 		local ret = init(obj, p, ...)
 		
 		-- the init function may return:
-		-- - the same object or nil, or
-		-- - a new table, in which case the metatable needs to
+		-- = the same object or nil, or
+		-- = a new table, in which case the metatable needs to
 		--   be set on the new table, or
-		-- - an object, in which case the data must be copied,
+		-- = an object, in which case the data must be copied,
 		--   because we can't change an object metatable
-		-- - an error object (string)
+		-- = an error object (string)
 		--
 		if ret == obj then
 			return obj
