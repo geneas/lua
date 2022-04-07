@@ -48,11 +48,11 @@ Set verbose flag to t (default true)
 
 Returns current verbose setting (true of false) (same as _G.verbose)
 
-*d**n**print(...)*
+*d**_n_**print(...)*
 
 Print args (tab separated) and newline if current debug level >= n
 
-*d*n*printf(fmt, ...)*
+*d**_n_**printf(fmt, ...)*
 
 Print args (formatted) and newline if current debug level >= n
 

@@ -30,12 +30,12 @@ end
 
 local function usage()
 	heading()
-	print("usage: lua "..arg[0].." ")
+	print("usage: lua "..arg[0].." [<output filename>]")
 	print "options: "
 	print "         -c <cpp>       xpm chars per pixel (default 3)"
 	print "         -w <width>     width (default 512)"
 	print "         -h <height>    height (default 512)"
-	print "         -r <rotation>  ror\tate colours (0..2)"
+	print "         -r <rotation>  rotate colours (0..2)"
 	print "         -k <gradient>  range [0..1] default = 1"
 	print "         -v             verbose"
 	print "         -z             inc debug level"

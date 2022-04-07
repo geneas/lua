@@ -220,6 +220,27 @@ else
 	assert(mpi.shl(mpi"1234857623984562389456283",  18) == mpi"1234857623984562389456283000000000000000000")
 end
 
+-- test tofltstr
+assert((mpi"999999"):tofltstr(1) == "1e6")
+assert((mpi"999999"):tofltstr(2) == "1.0e6")
+assert((mpi"999999"):tofltstr(3) == "1.00e6")
+assert((mpi"999999"):tofltstr(4) == "1.000e6")
+assert((mpi"999999"):tofltstr(5) == "1.0000e6")
+assert((mpi"999999"):tofltstr(6) == "9.99999e5")
+assert((mpi"1000000"):tofltstr(5) == "1.0000e6")
+assert((mpi"1000000"):tofltstr(6) == "1.00000e6")
+assert((mpi"1000000"):tofltstr(7) == "1.000000e6")
+assert((mpi"1000001"):tofltstr(6) == "1.00000e6")
+assert((mpi"1000001"):tofltstr(7) == "1.000001e6")
+assert((mpi"999999999999999999999999999999"):tofltstr(6) == "1.00000e30")
+assert((mpi"999999999999999999999999999999"):tofltstr(30) == "9.99999999999999999999999999999e29")
+assert((mpi"1000000000000000000000000000000"):tofltstr(6) == "1.00000e30")
+assert((mpi"1000000000000000000000000000000"):tofltstr(30) == "1.00000000000000000000000000000e30")
+assert((mpi"1000000000000000000000000000001"):tofltstr(6) == "1.00000e30")
+assert((mpi"1000000000000000000000000000001"):tofltstr(30) == "1.00000000000000000000000000000e30")
+assert((mpi"1000000000000000000000000000001"):tofltstr(31) == "1.000000000000000000000000000001e30")
+
+
 -- jff:
 
 -- Generate successive digits of PI.
