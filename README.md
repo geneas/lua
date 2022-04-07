@@ -48,11 +48,11 @@ Set verbose flag to t (default true)
 
 Returns current verbose setting (true of false) (same as _G.verbose)
 
-*d**_n_**print(...)*
+*d*n*print(...)*
 
 Print args (tab separated) and newline if current debug level >= n
 
-*d**_n_**printf(fmt, ...)*
+*d*n*printf(fmt, ...)*
 
 Print args (formatted) and newline if current debug level >= n
 
@@ -126,6 +126,7 @@ If the _longspec_ table contains an entry 'returnargs=true' then non-option argu
 If the _longspec_ table contains an entry 'keepargs=true' then arguments containing options and option parameters are not removed from the _arg_ array. In this case non-option arguments are also returned by the iterator function as for 'returnargs=true' above.
 
 Example:
+
     require "geneas.dprint"
     require "geneas.getopt"
     local args = {}
@@ -149,11 +150,14 @@ in a format which can be read back in to reproduce the data structure. Only DAGs
 and values which can be converted to strings are supported.
 
 Example:
+
     require "geneas.export"
+    local tabutil = require "geneas.tabutil"
+    local tcompare = tabutil.tcompare
     local t = { 1, 2, a = 3, { 4, b = 5 }, c = { 6 } }
     local s = export(t)
     local t2 = load("return " .. s)()
-    -- now t2 == t
+    assert(tcompare(t, t2))
 
 
 ### camel.lua
