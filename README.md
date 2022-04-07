@@ -48,19 +48,19 @@ Set verbose flag to t (default true)
 
 Returns current verbose setting (true of false) (same as _G.verbose)
 
-*d*n*print(...)
+*d**n**print(...)*
 
 Print args (tab separated) and newline if current debug level >= n
 
-*d*n*printf(fmt, ...)
+*d*n*printf(fmt, ...)*
 
 Print args (formatted) and newline if current debug level >= n
 
-*vprint(...)
+*vprint(...)*
 
 Print args (tab separated) and newline if verbose setting is true
 
-*vprintf(fmt, ...)
+*vprintf(fmt, ...)*
 
 Print args (formatted) and newline if verbose setting is true
 
@@ -289,7 +289,8 @@ Example:
 
 *tabutil.tcompare(t1, t2[, depth])*
 
-Compares two tables for equality of contents to a specified depth. All non-table entries are compared for exact equality; no conversions are performed.
+Compares two tables for equality of contents to a specified depth (default 50).
+All non-table entries are compared for exact equality; no conversions are performed.
 
 Down to the specified depth, tables are considered equal if their contents are equal (according
 to tcompare). At the depth limit tables are only equal if they are the same table.
