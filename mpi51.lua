@@ -16,6 +16,7 @@ local classof = class.classof
 
 local tabutil = require "geneas.tabutil"
 local merge = tabutil.merge
+local map = tabutil.map
 
 local pow = math.pow
 local abs = math.abs
@@ -24,6 +25,7 @@ local max = math.max
 local floor = math.floor
 local ceil = math.ceil
 local sqrt = math.sqrt
+local log = math.log
 
 local insert = table.insert
 local remove = table.remove
@@ -68,13 +70,16 @@ if _VERSION:match"Lua 5%.[12]" then
 	mpi = _G.mpi
 end
 
+local MAXBITS = 26	-- max binary units (bits) per mpi digit
+local MAXDECS = 7		-- max decimal units (decimal digits) per mpi digit
+
 --[[--------------------------------------------------
 |
 |	MPI representation:
 |
 |	{
 |		[negative = true,]	-- sign flag
-|		[1..] = n,			-- array of digits; [1] is LSD
+|		[1..] = n,				-- array of digits; [1] is LSD
 |	}
 |
 --]]--------------------------------------------------
@@ -99,12 +104,13 @@ local digit_sep		-- digit separator for optimized output
 local paranoid			-- enable expensive sanity checks
 local bitops
 
+-- set digit size; return previous value
 local function _setdigit(n)
 	local n0, n = digit_bits, tonumber(n)
 	
-	digit_bits = (not n or n == 0) and 25 or n	-- default digit is 25 bits
+	digit_bits = not n and MAXBITS or n == 0 and -MAXDECS or n	-- default digit is MAXBITS bits
 	if digit_bits > 0 then
-		if digit_bits > 25 then error "mpi.setdigit: digit too large" end
+		if digit_bits > MAXBITS then error "mpi.setdigit: digit too large" end
 		digit_unit = 2
 		digit_width = digit_bits
 		digit_fmt = (digit_bits % 4 == 0) and "%0" .. floor(digit_bits / 4) .. "X" or nil
@@ -113,7 +119,7 @@ local function _setdigit(n)
 		digit_sep = ":"
 		bitops = have_bit32
 	else
-		if digit_bits < -7 then error "mpi.setdigit: digit too large" end
+		if digit_bits < -MAXDECS then error "mpi.setdigit: decimal digit too large" end
 		digit_unit = 10
 		digit_width = -digit_bits
 		digit_fmt = "%0" .. digit_width .. "d"
@@ -150,6 +156,7 @@ end
 -- setup default digit
 _setdigit()
 --_setdigit(-3)	-- for testing use base 1000
+--_setdigit(-1)	-- ... or base 10
 
 
 local function _check(m)
@@ -457,8 +464,9 @@ end
 -- divide by mpi
 local function _divmod(a, b)
 	--
-	-- long division
+	-- long division internal primitive
 	-- this implementation using Byte Division method [Rice & Hughey 1998]
+	-- nb: on entry, a > b must be true
 	--
 	local len = #b
 	
@@ -637,7 +645,7 @@ local function add(m1, m2)
 	if type(m1) == "number" then m1 = _mpi(m1) end
 	if type(m2) == "number" then m2 = _mpi(m2) end
 	
-	if m1.negative == m2.negative then
+	if not m1.negative == not m2.negative then
 		return _add(_mpi(m1), m2, 0)
 	else
 		local sgn = _cmp(m1, m2)	-- compare magnitudes
@@ -655,7 +663,7 @@ local function sub(m1, m2)
 	if type(m1) == "number" then m1 = _mpi(m1) end
 	if type(m2) == "number" then m2 = _mpi(m2) end
 	
-	if m1.negative ~= m2.negative then
+	if not m1.negative ~= not m2.negative then
 		return _add(_mpi(m1), m2, 0)
 	else
 		local sgn = _cmp(m1, m2)	-- compare magnitudes
@@ -729,7 +737,7 @@ local function divmod(m1, m2, tozero)
 			quo = _mpi(1)
 			rem = _mpi()
 		elseif diff < 0 then
-			quo = _mpi()
+			quo = _mpi()	-- quotient is zero
 			rem = _mpi(m1)	-- sign will be overwritten
 		elseif diff > 0 then
 			quo, rem = _divmod(m1, m2)
@@ -966,6 +974,58 @@ local function factorial(x)
 	return eq(x, 1) and 1 or _mpi(x) * factorial(x - 1)
 end
 
+-- constant for tofltstr
+local LOG10_2 = log(2, 10)
+
+-- convert to floating point string representation with specified number of significant digits
+local function tofltstr(m, ndig)
+	local digits = {}
+	local expon
+	
+	if digit_unit == 2 then
+		-- estimate highest power of ten
+		expon = ceil((sigplaces(m - 1) + 1) * LOG10_2)
+	else
+		expon = sigplaces(m) - 1
+	end
+		
+	local tens = pow(10, expon)
+		
+	-- ensure estimate is in range m/10 < tens <= m
+	while tens > m do
+		m = m * 10		-- equivalent to dividing estimate by 10
+		expon = expon - 1
+	end
+	
+	-- compute digits starting from MSD
+	for i = 1, ndig + 1 do
+		local dig, rem = divmod(m, tens)
+		digits[i] = _tonumber(dig)
+		m = rem * 10
+	end
+	
+	-- round LSD
+	if digits[ndig + 1] >= 5 then
+		for i = ndig, 1, -1 do
+			local d = digits[i]
+			if d < 9 then
+				digits[i] = d + 1
+				break
+			else
+				digits[i] = 0
+				if i == 1 then
+					insert(digits, 1, 1)
+					expon = expon + 1
+				end
+			end
+		end
+	end
+	
+	digits = map(digits, function(d) return char(0x30 + d) end)
+	insert(digits, 2, '.')
+	return concat(digits):sub(1, ndig <= 1 and ndig or ndig + 1) .. 'e' .. tostring(expon)
+end
+
 
 -- NB: this is called by the constructor function to initialize the object data
 --
@@ -995,6 +1055,7 @@ end
 local methods = {
 	tonumber		= _tonumber,
 	tostring		= _tostring,
+	tofltstr		= tofltstr,
 
 	length		= function(m) return #m end,
 	sigplaces	= sigplaces,

@@ -6,7 +6,7 @@
 |  Created:    17:04:11  21 Jan  2012                                      |
 |  Author:     Andrew Cannon <ajc@gmx.net>                                 |
 |                                                                          |
-|  Copyright(c) 2012-2019 Andrew Cannon                                    |
+|  Copyright(c) 2012-present Andrew Cannon                                 |
 |  Licensed under the terms of the MIT License                             |
 |                                                                          |
 ]]--------------------------------------------------------------------------
@@ -24,6 +24,8 @@ local sort = table.sort
 local type = _G.type
 local pairs = _G.pairs
 local tonumber = _G.tonumber
+
+local MAXDEPTH = 50 -- default
 
 
 -- general utility functions
@@ -241,17 +243,17 @@ local function tcompare(t1, t2, depth)
 	if type(t1) ~= type(t2) then
 		return false
 	end
-	if type(t1) ~= "table" or not depth or depth == 0 then
+	if type(t1) ~= "table" or depth == 0 then
 		return t1 == t2
 	end
 	
 	local done = {}
 	
 	for k, v in pairs(t1) do
-		if not tcompare(v, t2[k], depth - 1) then
+		if not tcompare(v, t2[k], depth and depth - 1 or MAXDEPTH - 1) then
 			return false
 		end
-		done = k
+		done[k] = true
 	end
 	for k, _ in pairs(t2) do
 		if not done[k] then
@@ -261,7 +263,7 @@ local function tcompare(t1, t2, depth)
 	return true
 end
 
--- numeric cort
+-- numeric sort
 local function numericlt(a, b)
 	--
 	-- numeric sort - numeric substrings are sorted in

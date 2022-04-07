@@ -24,6 +24,45 @@ Output is generated via io.stdout:write(), unless a global function debug_writer
 defined, in which case this function is called with the formatted output instead. Each call to any
 of the print functions results in a single call to the output function.
 
+*setDebugLevel(n)*
+
+Set current debug level
+
+*incDebugLevel()*
+
+Increment current debug level
+
+*decDebugLevel()*
+
+Decrement current debug level
+
+*getDebugLevel()*
+
+Returns current debug level (same as _G.debug_level)
+
+*setVerbose(t)*
+
+Set verbose flag to t (default true)
+
+*getVerbose()*
+
+Returns current verbose setting (true of false) (same as _G.verbose)
+
+*d*n*print(...)
+
+Print args (tab separated) and newline if current debug level >= n
+
+*d*n*printf(fmt, ...)
+
+Print args (formatted) and newline if current debug level >= n
+
+*vprint(...)
+
+Print args (tab separated) and newline if verbose setting is true
+
+*vprintf(fmt, ...)
+
+Print args (formatted) and newline if verbose setting is true
 
 
 ### dump.lua
@@ -86,6 +125,20 @@ If the _longspec_ table contains an entry 'returnargs=true' then non-option argu
 
 If the _longspec_ table contains an entry 'keepargs=true' then arguments containing options and option parameters are not removed from the _arg_ array. In this case non-option arguments are also returned by the iterator function as for 'returnargs=true' above.
 
+Example:
+    require "geneas.dprint"
+    require "geneas.getopt"
+    local args = {}
+    for opt, par, err in getopt(arg, "o:vz", { "--output=(o)", "--verbose(v)", "--debug(z)", returnargs = true }) do
+        if opt == true then table.insert(args, par)
+        elseif opt == "o" then outfile = par
+        elseif opt == "v" then setVerbose(true)
+        elseif opt == "z" then incDebugLevel()
+        else error(err)
+        end
+    end
+
+
 
 ### export.lua
 
@@ -95,6 +148,12 @@ Installs a global function 'export' which exports hierarchical string & numerica
 in a format which can be read back in to reproduce the data structure. Only DAGs containing keys
 and values which can be converted to strings are supported.
 
+Example:
+    require "geneas.export"
+    local t = { 1, 2, a = 3, { 4, b = 5 }, c = { 6 } }
+    local s = export(t)
+    local t2 = load("return " .. s)()
+    -- now t2 == t
 
 
 ### camel.lua
@@ -295,9 +354,9 @@ This module contains some high-level table operations:
 
 *tabular.unify(ts[, flags])*
 
-Recursively unifies the array of tables found in *ts*. Similar to unionfs, the returned table appears to
-contain all elements found in any of the component tables, with elements in earlier tables
-taking priority over those in later tables.
+Recursively unifies the array of tables found in *ts*. Similar to the unionfs file system, the returned table appears to
+contain all table entries found in any of the component tables, with entries in earlier tables
+taking priority over those in later tables in the case of identical keys.
 
 The result of a call to tabular.unify is called a unification. It is an empty table whose contents are generated dynamically via metamethods. If the contents of the component tables change after the unification has been created then the contents of the unification will also change accordingly. Note that in general sub-tables of a unification are also unifications (see below).
 
@@ -624,11 +683,11 @@ These function control the static properties of the mpi implementation and shoul
 
 _mpi.setdigit(d)_
 
-Set the size of the mpi digit to 2^d. The default and maximum value is 31, since a lua number, which is 63 bits plus sign, must be able to hold the product of two digits. (Note: in the lua 5.1/5.2 version the default and maximum value is 25).
+Set the size of the mpi digit to 2^d. The default (d == nil) and maximum value is 31, since a lua number, which is 63 bits plus sign, must be able to hold the product of two digits. (Note: in the lua 5.1/5.2 version the default and maximum value is 25).
 
 If the digit size is a multiple of four bits then conversion of mpi objects to hexadecimal string format is optimized by writing each mpi digit as a hex number and concatenating. In this case the digits will by default be separated by a ':' character (this can be disabled by calling setconfig).
 
-If a negative value is specified then the mpi module operates in a special decimal mode, in which the mpi digit is given by 10^(-d). This mode is operationally the same except that the shift operators and shift functions operate on decimal digits rather than bits; ie in decimal mode *mpi(123) << 1 = 1230*. Also, the logical bit operations (&, |, ^) are not meaningful in decimal mode.
+If a zero or negative value is specified then the mpi module operates in a special decimal mode, in which the mpi digit is given by 10^(-d). If d == 0 then the default value of -9 is used (-7 for lua 5.1/5.2). This mode is operationally the same except that the shift operators and shift functions operate on decimal digits rather than bits; ie in decimal mode *mpi(123) << 1 = 1230*. Also, the logical bit operations (&, |, ^) are not meaningful in decimal mode.
 When converting to decimal string format the mpi digits are separated by ',' characters.
 
 _mpi.setconfig(c)_

@@ -24,6 +24,7 @@ we can return a non-zero status to the shell which will be detected by
 
 local name		-- name of test module to be run
 local map = {}	-- mapping from installed to local names
+local options = {}
 
 local debug_level
 while true do
@@ -31,7 +32,7 @@ while true do
 	
 	if not a then break
 	elseif a == "-z" then debug_level = true
-	elseif a:match"-m" then
+	elseif a:match"^%-m" then
 		local mapfile = a:match"-m(.*)"
 		if	mapfile then
 		   if debug_level then print("mapfile = " .. mapfile) end
@@ -49,6 +50,15 @@ while true do
 				end
 			end
 		end
+	elseif a:match"^%-o" then
+		-- pass option to test module
+		-- syntax: -o<test module>:<option>
+		-- if <test_module> is empty or it matches the test name then 
+		-- the option is added to the test module arguments
+		local mod, opt = a:match"..([^:]*):(.*)"
+		table.insert(options, { mod = mod, opt = opt })
+	elseif a:match"^%-" then
+		error "invalid option"
 	else
 		name = a			-- start of non-option args
 		break
@@ -83,9 +93,16 @@ table.insert(package.loaders or package.searchers, 1, function(modname)
 	end)
 
 if name then
+	local args = { }
+	for _, o in ipairs(options) do
+		if o.mod == "" or o.mod == name then
+			table.insert(args, o.opt)
+		end
+	end
+	
 	if map[name] then name = map[name] end
 	
-	local ok, err = xpcall(function() return require("geneas.test." .. name) end, debug.traceback)
+	local ok, err = xpcall(function() arg = args; return require("geneas.test." .. name) end, debug.traceback)
 	
 	if not ok then
 		print("\n*** test failed: " .. err .. " ***")

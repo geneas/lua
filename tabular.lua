@@ -6,7 +6,7 @@
 |  Created:    17:04:11  21 Jan  2012                                      |
 |  Author:     Andrew Cannon <ajc@gmx.net>                                 |
 |                                                                          |
-|  Copyright(c) 2012-2019 Andrew Cannon                                    |
+|  Copyright(c) 2012-present Andrew Cannon                                 |
 |  Licensed under the terms of the MIT License                             |
 |                                                                          |
 ]]--------------------------------------------------------------------------
@@ -47,7 +47,7 @@ local tonumber = _G.tonumber
 --
 local NIL = {}
 local UNIFY = {}
-local MAXDEPTH = 50
+local MAXDEPTH = 50 -- default
 
 local function istable(v)
 	return type(v) == "table" and v ~= NIL and classof(v) == nil
