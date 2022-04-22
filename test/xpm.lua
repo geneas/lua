@@ -68,6 +68,8 @@ local xpm = XPM.new(file, width, height, cpp)
 local min = math.min
 local max = math.max
 
+local function round(x) return math.floor(x + 0.5) end
+
 local m = {}
 local ri = (0 + rot) % 3 + 1
 local gi = (1 + rot) % 3 + 1
@@ -85,7 +87,11 @@ for yy = 0, height - 1 do
 				min(1, x > y and (1 - x) * (1/(1-k) - y*k/(1-k)) or (1 - y) * (1/(1-k) - x*k/(1-k)))
 			}
 		
-		my[xx + 1] = xpm:defcolour { r = c[ri], g = c[gi], b = c[bi], range = 1 }
+		local rx, gx, bx = round(c[ri] * 255), round(c[gi] * 255), round(c[bi] * 255)
+		if rx % 17 == 0 and gx % 17 == 0 and bx % 17 == 0 then
+			my[xx + 1] = xpm:defcolour(string.format("#%x%x%x", rx / 17, gx / 17, bx / 17))
+		else my[xx + 1] = xpm:defcolour { r = c[ri], g = c[gi], b = c[bi], range = 1 }
+		end
 	end
 	m[yy + 1] = my
 end

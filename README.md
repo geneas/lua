@@ -577,7 +577,7 @@ is opened (see _xpm:open()_ below). If characters-per-pixel is not equal to 1 th
 Define a colour and return its symbol as a lua string. The symbol may be specified in which case it must not already
 be defined, or if so, the colour must match the current definition.
 
-Colours may be specified as a string in the usual format '#rrggbb", or as a table containing RGB or HSV data.
+Colours may be specified as a string in the usual format '#rrggbb' or '#rgb', or as a table containing RGB or HSV data.
 
 An RGB colour table must contain members _r, g, and b_ and optionally _range_. If no range is given then the
 components are assumed to be in the range 0..1, otherwise 0..range.
@@ -817,7 +817,7 @@ Set the separator for optimized string conversion to _str_, which may be empty.
 
 **c.divslash=*boolean***
 
-If set to _true_ then the fractional division operator '/' may be used as alias for '//' (lua 5.3 only)
+If set to _true_ then the fractional division operator '/' may be used as alias for '//' (lua 5.3+ only)
 
 **c.paranoid=*boolean***
 
