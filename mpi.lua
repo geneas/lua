@@ -504,6 +504,7 @@ end
 
 -- conversion functions
 
+-- r: empty mpi object
 local function _loadn(r, n)
 	if n < 0 then
 		r.negative = true
@@ -518,24 +519,22 @@ local function _loadn(r, n)
 	return r
 end
 
+-- r: empty mpi object
 local function _loadstr(r, s, radix)
-	local sep = gsub(digit_sep, "[%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%1")
-	local sign, base, num = match(s, "^([+-]?)(0?[xX]?)([%x" .. sep .. "]+)$")
+	local sep = gsub(digit_sep, "[%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%1")	-- escape patterns
+	local sign, pfx, num = match(s, "^([+-]?)(0?[xX]?)([%x" .. sep .. "]+)$")
 	
 	if not sign then error "mpi: failed to parse" end
 	if not radix then
-		if match(base, "0[xX]") then radix = 16
-		elseif base == "0" then radix = 8
-		else radix = 10
+		if pfx == "" then radix = 10
+		elseif pfx == "0" then radix = 8
+		else radix = 16
 		end
 	end
 	if radix < 2 or radix > 36 then error "mpi: invalid radix" end
 	for c in gmatch(num, "%x") do
-		local digit =	match(c, "%d") and byte(c) - 48
-					or	match(c, "%u") and byte(c) - 55
-					or	match(c, "%l") and byte(c) - 87
-					or 	radix
-		
+		local digit = byte(c) - 48
+		if digit > 9 then digit = (digit + 9) & 15 end
 		if digit >= radix then error "mpi: invalid digit" end
 		
 		_add(_muln(r, radix), { [1] = digit }, 0)

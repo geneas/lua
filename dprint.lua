@@ -100,23 +100,25 @@ end
 _G.printf =	_printf
 
 -- debug fns
-function _G.d0print(...)	_dprint(0, ...)		end
-function _G.d1print(...)	_dprint(1, ...)		end
-function _G.d2print(...)	_dprint(2, ...)		end
-function _G.d3print(...)	_dprint(3, ...)		end
-function _G.d4print(...)	_dprint(4, ...)		end
-function _G.d5print(...)	_dprint(5, ...)		end
-function _G.d6print(...)	_dprint(6, ...)		end
-function _G.d7print(...)	_dprint(7, ...)		end
+function _G.d0print(...)		_dprint(0, ...)		end
+function _G.d1print(...)		_dprint(1, ...)		end
+function _G.d2print(...)		_dprint(2, ...)		end
+function _G.d3print(...)		_dprint(3, ...)		end
+function _G.d4print(...)		_dprint(4, ...)		end
+function _G.d5print(...)		_dprint(5, ...)		end
+function _G.d6print(...)		_dprint(6, ...)		end
+function _G.d7print(...)		_dprint(7, ...)		end
+function _G.dnprint(n, ...)	_dprint(n, ...)		end
 
-function _G.d0printf(s, ...)	_dprintf(0, s, ...) end
-function _G.d1printf(s, ...)	_dprintf(1, s, ...) end
-function _G.d2printf(s, ...)	_dprintf(2, s, ...) end
-function _G.d3printf(s, ...)	_dprintf(3, s, ...) end
-function _G.d4printf(s, ...)	_dprintf(4, s, ...) end
-function _G.d5printf(s, ...)	_dprintf(5, s, ...) end
-function _G.d6printf(s, ...)	_dprintf(6, s, ...) end
-function _G.d7printf(s, ...)	_dprintf(7, s, ...) end
+function _G.d0printf(s, ...)		_dprintf(0, s, ...) end
+function _G.d1printf(s, ...)		_dprintf(1, s, ...) end
+function _G.d2printf(s, ...)		_dprintf(2, s, ...) end
+function _G.d3printf(s, ...)		_dprintf(3, s, ...) end
+function _G.d4printf(s, ...)		_dprintf(4, s, ...) end
+function _G.d5printf(s, ...)		_dprintf(5, s, ...) end
+function _G.d6printf(s, ...)		_dprintf(6, s, ...) end
+function _G.d7printf(s, ...)		_dprintf(7, s, ...) end
+function _G.dnprintf(n, s, ...)	_dprintf(n, s, ...) end
 
 -- for compatibility
 _G.dprint = _G.d1print
