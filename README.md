@@ -48,17 +48,17 @@ Set verbose flag to t (default true)
 
 Returns current verbose setting (true of false) (same as _G.verbose)
 
-*d*n*print(...)*
+*d*__n__*print(...)*
 
-Print args (tab separated) and newline if current debug level >= n
+Print args (tab separated) and newline if current debug level >= **n**
 
 *dnprint(n, ...)*
 
 Print args (tab separated) and newline if current debug level >= n
 
-*d*n*printf(fmt, ...)*
+*d*__n__*printf(fmt, ...)*
 
-Print args (formatted) and newline if current debug level >= n
+Print args (formatted) and newline if current debug level >= **n**
 
 *dnprintf(n, fmt, ...)*
 
@@ -195,6 +195,55 @@ is in lower case.
 *camel.from(s)*
 
 Convert _s_ from camel-case to lower case underscore-separated format.
+
+
+
+### class.lua
+
+**local class = require "geneas.class"**
+
+Implements a simple class/object infrastructure. See modules xpm.lua and mpi.lua for examples of usage.
+
+*class(cls)*
+
+Converts table _cls_ into a class object and returns it. Objects of this class will have table _cls_ as their metatable,
+so it should contain any required metamethods.
+The table should also contain an entry _name_ specifying the name of the class.
+This will be returned by the class.type() function.
+
+Methods of class objects should be specified in a sub-table __index. By default the __index table is the same as the
+class object, but it can also be explicitly set to a different table to distinguish between class [static] methods
+and object methods.
+
+If the table contains a function entry _init_ then this function will be called when objects of the class are created. 
+
+After the class has been registered objects of this class can be created by calling the class object. Any parameters
+will be passed to the init function (if any). If a class has no init function then the class object must be called with
+a table as parameter, which will be converted directly into the object.
+
+The init function is called with an object of the class as first parameter, followed by all arguments to the call to the
+class object. The first parameter is an empty object unless the first argument of the call is a simple
+table (ie not an object), in which case this table is converted into an object (by setting its metatable) and
+passed as the first parameter.
+
+The init function may return the already created object or a new table. In the latter case the original object is deleted
+and the returned table is converted to an object by setting its metatable.
+A nil return value is equivalent to returning the original object.
+
+This allows the init function to perform initialization and/or checking of the parameters according to the requirements
+of the class.
+
+*class.classof(obj)*
+
+If _obj_ is a member of a class created by this module then this function returns its class object (ie, metatable),
+otherwise returns nil.
+
+*class.type(obj)*
+
+Returns the type of _obj_ as a string. If _class.classof(obj)_ returns nil (ie the object is not a member of a class
+created by this module) then the value of the global function _type(obj)_ is returned.
+Otherwise the name of the class (cls.name) prefixed by "class " is returned.
+If it is a class object then "class class" is returned.
 
 
 
@@ -506,51 +555,6 @@ If ctrl is a table then it must be an array of tables which are to be copied by 
 Otherwise, the most general case, ctrl must be a function which is called with the table and the
 current depth as parameters. If the function returns true then the table will be copied by reference,
 otherwise deep-copying will continue.
-
-
-### class.lua
-
-**local class = require "geneas.class"**
-
-Implements a simple class/object infrastructure. See modules xpm.lua and mpi.lua for examples of usage.
-
-*class(cls)*
-
-Converts table _cls_ into a class object and returns it. Objects of this class will have table _cls_ as their metatable,
-so it should contain any required metamethods.
-The table should also contain an entry _name_ specifying the name of the class.
-This will be returned by the class.type() function.
-Methods of class objects should be specified in a sub-table __index.
-
-If the table contains a function entry _init_ then this function will be called when objects of the class are created. 
-
-After the class has been registered objects of this class can be created by calling the class object. Any parameters
-will be passed to the init function (if any). If a class has no init function then the class object must be called with
-a table as parameter, which will be converted directly into the object.
-
-The init function is called with an object of the class as first parameter, followed by all arguments to the call to the
-class object. The first parameter is an empty object unless the first argument of the call is a simple
-table (ie not an object), in which case this table is converted into an object (by setting its metatable) and
-passed as the first parameter.
-
-The init function may return the already created object or a new table. In the latter case the original object is deleted
-and the returned table is converted to an object by setting its metatable.
-A nil return value is equivalent to returning the original object.
-
-This allows the init function to perform initialization and/or checking of the parameters according to the requirements
-of the class.
-
-*class.classof(obj)*
-
-If _obj_ is a member of a class created by this module then this function returns its class object (ie, metatable),
-otherwise returns nil.
-
-*class.type(obj)*
-
-Returns the type of _obj_ as a string. If _class.classof(obj)_ returns nil (ie the object is not a member of a class
-created by this module) then the value of the global function _type(obj)_ is returned.
-Otherwise the name of the class (cls.name) prefixed by "class " is returned.
-If it is a class object then "class class" is returned.
 
 
 ### xpm.lua

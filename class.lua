@@ -6,14 +6,14 @@
 |  Created:    19:03:26  11 Dec  2018                                      |
 |  Author:     Andrew Cannon <ajc@gmx.net>                                 |
 |                                                                          |
-|  Copyright(c) 2018-2019 Andrew Cannon                                    |
+|  Copyright(c) 2018-2022 Andrew Cannon                                    |
 |  Licensed under the terms of the MIT License                             |
 |                                                                          |
 ]]--------------------------------------------------------------------------
 
 local class = {}
 if _VERSION:match"Lua 5%.[12]" then
-	module("class",package.seeall)
+	module("class", package.seeall)
 	class = _G.class
 end
 

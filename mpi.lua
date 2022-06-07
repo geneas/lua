@@ -10,9 +10,9 @@
 ]]--------------------------------------------------------------------------
 
 local class = require "geneas.class"
-local classof = class.classof
-
 local tabutil = require "geneas.tabutil"
+
+local classof = class.classof
 local merge = tabutil.merge
 local map = tabutil.map
 
@@ -856,6 +856,12 @@ end
 
 -- comparisons
 
+local function _eq(m1, m2)
+	-- type(m1) == type(m2) == mpi
+	-- check sign and compare magnitude
+	return not m1.negative == not m2.negative and _cmp(m1, m2) == 0
+end
+
 local function eq(m1, m2)
 	local t1 = type(m1)
 	local t2 = type(m2)
@@ -863,13 +869,12 @@ local function eq(m1, m2)
 	if t1 == "number" then
 		if t2 == "number" then return m1 == m2 end
 		m1 = _mpi(m1)
-	elseif classof(m1) ~= mpi then return false
+	elseif classof(m1) ~= mpi then return rawequal(m1, m2)
 	end
 	if t2 == "number" then m2 = _mpi(m2)
-	elseif classof(m2) ~= mpi then return false
+	elseif classof(m2) ~= mpi then return rawequal(m1, m2)
 	end
-	
-	return not m1.negative == not m2.negative and _cmp(m1, m2) == 0
+	return _eq(m1, m2)	
 end
 
 local function lt(m1, m2)
@@ -1056,8 +1061,8 @@ mpi.__pow		= pow
 
 mpi.__unm		= uminus
 
-mpi.__eq			= eq
-mpi.__eqgen		= eq
+mpi.__eq			= _eq		-- both operands are mpi objects
+mpi.__eqval		= eq
 mpi.__lt			= lt
 mpi.__le			= le
 

@@ -6,21 +6,21 @@
 |  Created:    17:35:17  13 Aug  2005                                      |
 |  Author:     Andrew Cannon <ajc@gmx.net>                                 |
 |                                                                          |
-|  Copyright(c) 2005-2019 Andrew Cannon                                    |
+|  Copyright(c) 2005-2022 Andrew Cannon                                    |
 |  Licensed under the terms of the MIT License                             |
 |                                                                          |
 ]]--------------------------------------------------------------------------
 
 if _VERSION:match"Lua 5%.[12]" then
-	module("export",package.seeall)
+	module("export", package.seeall)
 end
 
-local insert = table.insert
-local concat = table.concat
-local sort = table.sort
 local gsub = string.gsub
 local match = string.match
 local format = string.format
+local insert = table.insert
+local concat = table.concat
+local sort = table.sort
 
 local keywords = {
 	["and"]=true,		["break"]=true,	["do"]=true,
@@ -74,9 +74,9 @@ function _G.export(var)
 					
 					if type(key) ~= "string" or keywords[key]
 							or not match(key, "^[%a_][%w_]*$") then
-						tag = "["..exp(key).."]"
+						tag = "[" .. exp(key) .. "]"
 					end
-					insert(out, tag.."="..exp(val))
+					insert(out, tag .. "=" .. exp(val))
 				end
 			end
 			return "{" .. concat(out, ",") .. "}"

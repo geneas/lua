@@ -21,18 +21,20 @@ require "geneas.getopt"
 require "geneas.export"
 require "geneas.class"
 
+geneas.tabutil		= require "geneas.tabutil"
 geneas.tabular		= require "geneas.tabular"
-geneas.split		= require "geneas.split"
 geneas.camel		= require "geneas.camel"
-geneas.parser		= require "geneas.parser"
-
-geneas.region		= require "geneas.region"
 geneas.xml			= require "geneas.xml"
-geneas.aatree		= require "geneas.aatree"
+geneas.mpi			= require "geneas.mpi"
 
+--[[--
+geneas.split		= require "geneas.split"
+geneas.parser		= require "geneas.parser"
+geneas.region		= require "geneas.region"
+geneas.aatree		= require "geneas.aatree"
 geneas.id3			= require "geneas.id3"
 geneas.id4			= require "geneas.id4"
-geneas.mpi			= require "geneas.mpi"
+--]]--
 
 if not _VERSION:match"Lua 5%.[12]" then
 	--

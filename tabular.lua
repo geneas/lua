@@ -11,19 +11,25 @@
 |                                                                          |
 ]]--------------------------------------------------------------------------
 
+require "geneas.dprint"
+
+local class = require "geneas.class"
+
 local tabular = {}
 if _VERSION:match"Lua 5%.[12]" then
-	module("tabular",package.seeall)
+	module("tabular", package.seeall)
 	tabular = _G.tabular
 end
 
-require "geneas.dprint"
+-- use lua's own pqairs function internally
+local pairs = _G.pairs
 
+local wrap = coroutine.wrap
+local yield = coroutine.yield
 local format = string.format
 local insert = table.insert
 local sort = table.sort
 
-local class = require "geneas.class"
 local classof = class.classof
 
 
@@ -34,13 +40,9 @@ local g_metamode_kv = { __mode = "kv" }
 g_metamode_k.__metatable = g_metamode_k
 g_metamode_v.__metatable = g_metamode_v
 g_metamode_kv.__metatable = g_metamode_kv
-
-local type = _G.type
-local pairs = _G.pairs
-local error = _G.error
-local tonumber = _G.tonumber
 	
 
+-------------------------------------------------------------------------------
 -- unify tables --
 ------------------
 -- unify({ tables [,writable:bool] [,maxdepth:int] }, writable:bool, update:function)
@@ -81,7 +83,7 @@ local function unify(tables, flags)
 		
 		for i, t in ipairs(tables) do
 			if type(t) ~= "table" then
-				error("unify: entry "..i.." is not a table")
+				error("unify: entry " .. i .. " is not a table")
 			end
 			ts[i] = t
 		end
@@ -145,7 +147,7 @@ local function unify(tables, flags)
 	
 	if maxdepth == 0 then
 		-- just combine keys (note: will no longer be write protected!)
-		dprint"Maximum unification depth exceeded"
+		dprint "Maximum unification depth exceeded"
 		return getkeys(tbl)
 	end
 	
@@ -258,9 +260,9 @@ local function unify(tables, flags)
 			end,
 			
 		__pairs = function()
-				return coroutine.wrap(function()
+				return wrap(function()
 						for key, value in pairs(getkeys()) do
-							coroutine.yield(key, type(value) == "table" and rv[key] or value)
+							yield(key, type(value) == "table" and rv[key] or value)
 						end
 					end)
 			end,
@@ -301,6 +303,9 @@ local function upairs(t)
 	end
 end
 
+
+
+-------------------------------------------------------------------------------
 -- structured indexing
 ----------------------
 -- name is an index in 'flat' form, eg "m1.m2[3][1].m3[2]"
@@ -404,6 +409,7 @@ local function fields(tab, maxdepth, selector)
 end
 
 
+-------------------------------------------------------------------------------
 -- deep copy of an arbitrary network
 ------------------------------------
 -- checks for loops and recombinations

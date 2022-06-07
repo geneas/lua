@@ -17,13 +17,13 @@ if _VERSION:match"Lua 5%.[12]" then
 	tabutil = _G.tabutil
 end
 
+local wrap = coroutine.wrap
+local yield = coroutine.yield
 local format = string.format
 local insert = table.insert
 local sort = table.sort
+local floor = math.floor
 
-local type = _G.type
-local pairs = _G.pairs
-local tonumber = _G.tonumber
 
 local MAXDEPTH = 50 -- default
 
@@ -166,7 +166,7 @@ end
 local function rotate(t, n)
 	local r = {}
 	local c = #t
-	local j = 1 + math.floor(n % c)
+	local j = 1 + floor(n % c)
 	
 	for i = 1, c do
 		r[i] = t[j]
@@ -293,7 +293,7 @@ end
 
 -- sorted pairs
 local function spairs(tbl, flags)
-	return coroutine.wrap(function()
+	return wrap(function()
 			local opttab = type(flags) == "table" and flags or {}
 			local optstr = type(flags) == "string" and flags or ""
 			local reverse = opttab.reverse or (optstr:match"%f[%a]reverse%f[%A]")
@@ -339,12 +339,12 @@ local function spairs(tbl, flags)
 			
 			for _, k in ipairs(keys) do
 				if not filter or filter(k) then
-					coroutine.yield(k, tbl[k])
+					yield(k, tbl[k])
 				end
 			end
 			for k, v in pairs(tbl) do
 				if not keymap[k] and (not filter or filter(k)) then
-					coroutine.yield(k, v)
+					yield(k, v)
 				end
 			end
 		end)
@@ -361,7 +361,7 @@ local function gtable(iter, state, value)
 	while true do
 		value = iter(state, value)
 		if not value then break end
-		table.insert(r, value)
+		insert(r, value)
 	end
 	return r
 end
@@ -375,7 +375,7 @@ local function g2table(iter, state, value)
 		
 		value, value2 = iter(state, value)
 		if not value then break end
-		table.insert(r, value2)
+		insert(r, value2)
 	end
 	return r
 end

@@ -6,7 +6,7 @@
 |  Created:    17:04:11  13 Aug  2005                                      |
 |  Author:     Andrew Cannon <ajc@gmx.net>                                 |
 |                                                                          |
-|  Copyright(c) 2005-2019 Andrew Cannon                                    |
+|  Copyright(c) 2005-2022 Andrew Cannon                                    |
 |  Licensed under the terms of the MIT License                             |
 |                                                                          |
 ]]--------------------------------------------------------------------------
@@ -15,14 +15,6 @@ if _VERSION:match"Lua 5%.[12]" then
 	module("dump",package.seeall)
 end
 
-local type = type
-local tostring = tostring
-local next = next
-local pairs = pairs
-local ipairs = ipairs
-local rawget = rawget
-local getmetatable = getmetatable
-local io = io
 local string_rep = string.rep
 local string_gsub = string.gsub
 local string_format = string.format
@@ -75,11 +67,11 @@ function _G.dump(var, flags)
 	elseif writer == true then writer = _G.debug_writer or io.write
 	elseif type(writer) ~= "function" then writer = _G[writer]
 	end	
-	if not writer then error("dump: invalid writer: "..tostring(writer)) end
+	if not writer then error("dump: invalid writer: " .. tostring(writer)) end
 
 	if header then
 		writer(header)
-		align = align and header:match"[^\n]+$"
+		align = align and header:match "[^\n]+$"
 		align = align and string_rep(' ', #align)
 	end
 	if type(indent) == "number" then indent = string_rep(" ", indent) end

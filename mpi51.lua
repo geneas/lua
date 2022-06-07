@@ -4,7 +4,7 @@
 |  Module:     mpi.lua                                                     |
 |  Function:   Multiprecision Integer Arithmetic in pure lua               |
 |                                                                          |
-|  Copyright(c) 2019 Andrew Cannon <ajc@gmx.net>                           |
+|  Copyright(c) 2019-2022 Andrew Cannon <ajc@gmx.net>                      |
 |  Licensed under the terms of the MIT License                             |
 |                                                                          |
 ]]--------------------------------------------------------------------------
@@ -12,9 +12,9 @@
 local _G = _G
 
 local class = require "geneas.class"
-local classof = class.classof
-
 local tabutil = require "geneas.tabutil"
+
+local classof = class.classof
 local merge = tabutil.merge
 local map = tabutil.map
 

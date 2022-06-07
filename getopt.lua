@@ -6,7 +6,7 @@
 |  Created:    20:06:11  30 Oct  2005                                      |
 |  Author:     Andrew Cannon <ajc@gmx.net>                                 |
 |                                                                          |
-|  Copyright(c) 2005-2019 Andrew Cannon                                    |
+|  Copyright(c) 2005-2022 Andrew Cannon                                    |
 |  Licensed under the terms of the MIT License                             |
 |                                                                          |
 ]]--------------------------------------------------------------------------
@@ -15,12 +15,13 @@ if _VERSION:match"Lua 5%.[12]" then
 	module("getopt",package.seeall)
 end
 
-local remove = table.remove
+local wrap = coroutine.wrap
+local yield = coroutine.yield
 local findstr = string.find
 local substr = string.sub
 local strlen = string.len
 local match = string.match
-local yield = coroutine.yield
+local remove = table.remove
 
 --[[
  Usage:
@@ -66,7 +67,7 @@ function _G.getopt(args, spec, longspec)
 		tlong[name] = { opt = opt, par = ({ ["="] = true, ["=?"] = false })[par] }
 	end
 	
-	return coroutine.wrap(function()
+	return wrap(function()
 			local i = 1
 			local function takearg()
 				if keepargs then i = i + 1 else remove(args, i) end
@@ -105,7 +106,7 @@ function _G.getopt(args, spec, longspec)
 					
 					while j <= len do
 						local opt = substr(a, j, j)
-						--print("...got option '"..opt.."'")
+						--print("...got option '" .. opt .. "'")
 						
 						local function dopar()			-- get parameter
 							if j > len then
@@ -114,7 +115,7 @@ function _G.getopt(args, spec, longspec)
 							else a = substr(a, j)		-- remainder of current arg
 							end
 							if a then
-								--print("....parameter '"..a.."'")
+								--print("....parameter '" .. a .. "'")
 								yield(opt, a)
 							else
 								yield('?', opt, "parameter expected")

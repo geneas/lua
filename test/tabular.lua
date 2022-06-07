@@ -10,6 +10,18 @@
 --
 -- 17:03:09  24 Jan  2019 - ajc
 
+local tabular = require "geneas.tabular"
+
+if _VERSION:match"Lua 5%.[12]" then
+	--
+	-- for lua < 5.3 install a 'pairs' function which can iterate over unifications
+	-- this must be done before other modules make their local copies of the global
+	-- pairs function - in particular the 'export' module which we use to check the
+	-- results of unification operations.
+	--
+	_G.pairs = tabular.upairs
+end
+
 require "geneas.getopt"
 require "geneas.dprint"
 require "geneas.export"
@@ -28,15 +40,6 @@ end
 
 local concat = table.concat
 local sort = table.sort
-
-local tabular = require "geneas.tabular"
-
-if _VERSION:match"Lua 5%.[12]" then
-	--
-	-- for lua < 5.3 install a 'pairs' function which can iterate over unifications
-	--
-	_G.pairs = tabular.upairs
-end
 
 -- utility function to display the contents of a table in 'flat' form
 --

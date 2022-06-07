@@ -15,6 +15,9 @@ require "geneas.dprint"
 require "geneas.export"
 require "geneas.dump"
 
+local tabutil = require "geneas.tabutil"
+local tabular = require "geneas.tabular"
+
 local args = {}
 local interactive
 for opt, par, err in getopt(arg, "vzid", true) do
@@ -29,18 +32,16 @@ end
 local concat = table.concat
 local sort = table.sort
 
-local tabutil = require "geneas.tabutil"
-
 -- utility function to display the contents of a table in 'flat' form
 --
 local function showfields(t, title, depth)
-	local fields = tabutil.fields(t, depth)
+	local fields = tabular.fields(t, depth)
 	
 	sort(fields)
 	for _, f in ipairs(fields) do
 		local name = f:match"^%[" and title .. f or title .. "." .. f
 		
-		print(name .. " = " .. tostring(export(tabutil.getfield(t, f))))
+		print(name .. " = " .. tostring(export(tabular.getfield(t, f))))
 	end
 end
 local function dshowfields(...) if _G.debug_level > 0 then showfields(...) end end

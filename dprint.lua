@@ -6,7 +6,7 @@
 |  Created:    17:04:11  13 Aug  2005                                      |
 |  Author:     Andrew Cannon <ajc@gmx.net>                                 |
 |                                                                          |
-|  Copyright(c) 2005-2021 Andrew Cannon                                    |
+|  Copyright(c) 2005-2022 Andrew Cannon                                    |
 |  Licensed under the terms of the MIT License                             |
 |                                                                          |
 ]]--------------------------------------------------------------------------
@@ -15,23 +15,26 @@ if _VERSION:match"Lua 5%.[12]" then
 	module("dprint",package.seeall)
 end
 
-local date = os.date
-local concat = table.concat
-local insert = table.insert
 local format = string.format
 local gmatch = string.gmatch
 local match = string.match
+local gsub = string.gsub
 local sub = string.sub
 local rep = string.rep
+local concat = table.concat
+local insert = table.insert
+local max = math.max
 local write = io.write
 local flush = io.flush
 local stdout = io.stdout
+local date = os.date
+
 
 _G.debug_level = _G.debug_level or 0
 
 function _G.setDebugLevel(n) if n then _G.debug_level = n end return debug_level end
 function _G.incDebugLevel() _G.debug_level = _G.debug_level + 1 end
-function _G.decDebugLevel() _G.debug_level = math.max(0, _G.debug_level - 1) end
+function _G.decDebugLevel() _G.debug_level = max(0, _G.debug_level - 1) end
 function _G.getDebugLevel() return _G.debug_level end
 function _G.setVerbose(t) _G.verbose = type(t) ~= "boolean" or t end
 function _G.getVerbose() return _G.verbose end
@@ -129,5 +132,4 @@ function _G.vprint(...)	if _G.verbose then _print(...) end end
 function _G.vprintf(s, ...) if _G.verbose then _printf(s, ...) end end
 
 -- error fn
-local _error = _G.error
-function _G.errorf(s, ...) _error(format(s, ...)) end
+function _G.errorf(s, ...) error(format(s, ...)) end
