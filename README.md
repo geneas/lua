@@ -117,7 +117,8 @@ Example:
     dump(t)
     dump(t.c, "hexkey,align,header=sub: ")
 
-output:
+Output:
+
     table: 0x1ccc300 = {
        [1]=>1
        [2]=>"two"
