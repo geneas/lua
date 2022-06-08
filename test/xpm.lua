@@ -3,14 +3,13 @@
 |                                                                          |
 |  Test program for XPM file generator                                     |
 |                                                                          |
-|  Copyright(c) 2019,2022 Andrew Cannon <ajc@gmx.net>                      |
+|  Copyright(c) 2019-2022 Andrew Cannon <ajc@gmx.net>                      |
 |  Licensed under the terms of the MIT License                             |
 |                                                                          |
 ]]--------------------------------------------------------------------------
 
 local VERSION = 2
 local REVISION = 0
-
 
 
 require "geneas.getopt"

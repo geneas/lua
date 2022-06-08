@@ -422,7 +422,7 @@ local function deepcopy(tbl, map, ctrl)
 	if not map.fwd then map.fwd = setmetatable({}, g_metamode_kv) end
 	
 	local fwd = map.fwd
-	local fixed = { [NIL] = true }
+	local fixed = { }
 	local depth = 0
 	
 	if ctrl then
@@ -445,7 +445,7 @@ local function deepcopy(tbl, map, ctrl)
 		fwd[tbl] = t
 		depth = depth + 1
 		for key, value in pairs(tbl) do
-			if type(value) == "table" and not fixed[value] then
+			if istable(value) and not fixed[value] then
 				t[key] = fwd[value] or copy(value)
 			else t[key] = value
 			end
@@ -454,7 +454,7 @@ local function deepcopy(tbl, map, ctrl)
 		return t
 	end
 	
-	return type(tbl) == "table" and not fixed[tbl] and copy(tbl) or tbl
+	return istable(tbl) and not fixed[tbl] and copy(tbl) or tbl
 end
 
 

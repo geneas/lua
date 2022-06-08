@@ -10,22 +10,12 @@
 --
 -- 17:03:09  24 Jan  2019 - ajc
 
-local tabular = require "geneas.tabular"
-
-if _VERSION:match"Lua 5%.[12]" then
-	--
-	-- for lua < 5.3 install a 'pairs' function which can iterate over unifications
-	-- this must be done before other modules make their local copies of the global
-	-- pairs function - in particular the 'export' module which we use to check the
-	-- results of unification operations.
-	--
-	_G.pairs = tabular.upairs
-end
-
 require "geneas.getopt"
 require "geneas.dprint"
 require "geneas.export"
 require "geneas.dump"
+
+local tabular = require "geneas.tabular"
 
 local args = {}
 local interactive
@@ -40,6 +30,13 @@ end
 
 local concat = table.concat
 local sort = table.sort
+
+if _VERSION:match"Lua 5%.[12]" then
+	--
+	-- for lua < 5.3 install a 'pairs' function which can iterate over unifications
+	--
+	_G.pairs = tabular.upairs
+end
 
 -- utility function to display the contents of a table in 'flat' form
 --
@@ -63,6 +60,7 @@ local x = {}
 local y = { a = 1, b = 2 }
 local z = { b = { p = 1, q = 2 }, c = 4 }
 local t = tabular.unify { x, y, z, writable = true }
+dprint"\n...created unification:"
 dprint(export(t))
 assert(export(t)=="{a=1,b=2,c=4}")
 
@@ -253,7 +251,35 @@ assert(concat(f,",")=="[1],a.g,b.c,e[1].f,e[1].h,e[2][1].j.k,e[2][1].j[1]")
 -- tabular.deepcopy
 -------------------
 dprint"\n...deepcopy:"
+local a = { 1 }
+local b = { { 2, 3 }, a }
+local c = { a = a, b = b }
+d2dump(c)
 
+local cs = ""
+dump(c, {seq=true, flat=true, writer=function(s) cs = cs .. s end})
+
+local map = {}
+local x1 = tabular.deepcopy(c, map)
+d2dump(x1)
+assert(x1.b[2] ~= c.b[2])
+
+local xs = ""
+dump(x1, {seq=true, flat=true, writer=function(s) xs = xs .. s end})
+assert(xs == cs)
+
+local x2 = tabular.deepcopy(c, nil, { b })			-- copy b by reference
+d2dump(x2)
+assert(x2.b == c.b)
+
+local x3 = tabular.deepcopy(c, map)						-- re-use previous mapping
+d2dump(x3)
+assert(x3.a == x1.a)
+assert(x3.b == x1.b)
+
+local xs = ""
+dump(x3, {seq=true, flat=true, writer=function(s) xs = xs .. s end})
+assert(xs == cs)
 
 
 vprint "test tabular ok"

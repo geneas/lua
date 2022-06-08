@@ -44,6 +44,7 @@ local controlchars = {
 -- hexkey			display integer keys in hex
 -- hexval			display integer values in hex
 -- flat				single line format (no pretty-printing)
+-- seq            label functions, tables and userdata sequentially rather than by address
 --
 function _G.dump(var, flags)
 
@@ -62,6 +63,7 @@ function _G.dump(var, flags)
 	local hexkey = opttab.hexkey or (optstr:match"%f[%a]hexkey%f[%A]")
 	local hexval = opttab.hexval or (optstr:match"%f[%a]hexval%f[%A]")
 	local flat = opttab.flat or (optstr:match"%f[%a]flat%f[%A]")
+	local seq = opttab.seq or (optstr:match"%f[%a]seq%f[%A]")
 	
 	if not writer then writer = io.write
 	elseif writer == true then writer = _G.debug_writer or io.write
@@ -93,7 +95,7 @@ function _G.dump(var, flags)
 	local function putstr(s)
 		writer((string_gsub(s, "[^%w%p%s'\"\\]", function(c) return "\\"..(controlchars[c] or ("x%02x"):format(c:byte())) end)))
 	end
-	local function newline(str)
+	local function newline()
 		if flat then
 			writer(",")
 		else
@@ -103,10 +105,15 @@ function _G.dump(var, flags)
 				writer(indent)
 			end
 		end
-		if str then putstr(str) end
 	end
 	local get = cooked and function(t, k) return t[k] end or rawget
 	local scan = cooked and pairs or function(t) return next, t end
+	
+	-- for sequential labels
+	local tnum = 0
+	local unum = 0
+	local fnum = 0
+	local seqtab = seq and {}
 	
 	-- determine lowest display level for each table
 	--
@@ -140,9 +147,30 @@ function _G.dump(var, flags)
 		end
 		return tostring(v)
 	end
+	local toqstring = seq and function(v)
+			local t = type(v)
+			if t ~= "table" and t ~= "userdata" and t ~= "function" then return tostring(v) end
+			
+			local q = seqtab[v]
+			if q then return q end		-- already indexed
+			
+			if t == "table" then
+				tnum = tnum + 1
+				q = "table_" .. tnum
+			elseif t == "function" then
+				fnum = fnum + 1
+				q = "function_" .. fnum
+			else
+				unum = unum + 1
+				q = "userdata_" .. unum
+			end
+			seqtab[v] = q
+			return q
+		end or tostring
+		
 	local function dump2(var, parent)
 		if type(var) == "string" then writer('"') end
-		putstr(hexval and toxstring(var) or tostring(var))
+		putstr(hexval and toxstring(var) or toqstring(var))
 		if type(var) == "string" then writer('"') end
 		
 		if maxlev and level == maxlev then return end
@@ -153,7 +181,8 @@ function _G.dump(var, flags)
 			
 			if meta then
 				level = level + 1
-				newline("[metatable: ")
+				newline()
+				writer("[metatable: ")
 				dump2(meta, var)
 				if meta == var then writer(" [self]") end
 				if meta == parent then writer(" [parent]") end
@@ -161,11 +190,17 @@ function _G.dump(var, flags)
 				level = level - 1
 			end
 			if type(var) == "table" then
+				local first = true
 				local function dokey(key)
+					if not flat then newline()
+					elseif not first then writer(",")
+					else first = false
+					end
+					
 					if type(key) == "string" then
-						newline("." .. tostring(key) .. "=>")
+						putstr("." .. tostring(key) .. "=>")
 					else
-						newline("[" .. (hexkey and toxstring(key) or tostring(key)) .. "]=>")
+						putstr("[" .. (hexkey and toxstring(key) or toqstring(key)) .. "]=>")
 					end
 					
 					local value = get(var, key)
@@ -193,7 +228,8 @@ function _G.dump(var, flags)
 					end
 				end
 				level = level - 1
-				newline("}")
+				if not flat then newline() end
+				writer("}")
 			end
 			if expand then done[var] = nil end
 		end
@@ -216,3 +252,4 @@ function _G.d4dump(v, ...)			if _G.debug_level >= 4 then _G.dump(v, ...) end end
 function _G.d5dump(v, ...)			if _G.debug_level >= 5 then _G.dump(v, ...) end end
 function _G.d6dump(v, ...)			if _G.debug_level >= 6 then _G.dump(v, ...) end end
 function _G.d7dump(v, ...)			if _G.debug_level >= 7 then _G.dump(v, ...) end end
+function _G.dndump(n, v, ...)		if _G.debug_level >= n then _G.dump(v, ...) end end

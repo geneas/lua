@@ -46,7 +46,7 @@ Set verbose flag to t (default true)
 
 *getVerbose()*
 
-Returns current verbose setting (true of false) (same as _G.verbose)
+Returns current verbose setting (true or false) (same as _G.verbose)
 
 *d*__n__*print(...)*
 
@@ -96,6 +96,7 @@ in particular how tables are displayed. The following flags are defined:
     hexkey         display integer keys in hex
     hexval         display integer values in hex
     flat           single line format (no pretty-printing)
+    seq            label functions, tables and userdata sequentially rather than by address
 
 Flags may be specified as a table or a string. If a table then each flag is a key with the associated value or _true_ for
 boolean flags. If a string then flags are comma separated groups of the form 'flag=value' or simply 'flag' for boolean flags.
@@ -108,6 +109,30 @@ a function in the global namespace. Note that this is the only way to specify a 
 * If flags is in string form then indent can only be specified as a number (of spaces).
 * The flags parameter may be a number in which case it is interpreted as the value of maxlev.
 * The flags parameter have the value _true_ in which case it is interpreted as 'cooked'.
+
+Example:
+
+    require "geneas.dump"
+    t = { 1, "two", { sub = true }, a = 3, b = "four", c = { "five" }}
+    dump(t)
+    dump(t.c, "hexkey,align,header=sub: ")
+
+output:
+    table: 0x1ccc300 = {
+       [1]=>1
+       [2]=>"two"
+       [3]=>table: 0x1ccc370 = {
+          .sub=>true
+       }
+       .c=>table: 0x1ccc3b0 = {
+          [1]=>"five"
+       }
+       .a=>3
+       .b=>"four"
+    }
+    sub: table: 0x1ccc3b0 = {
+            [0x1]=>"five"
+         }
 
 
 ### getopt.lua
@@ -167,8 +192,8 @@ Example:
 **require "geneas.export"**
 
 Installs a global function 'export' which exports hierarchical string & numerical data in tables
-in a format which can be read back in to reproduce the data structure. Only DAGs containing keys
-and values which can be converted to strings are supported.
+in a format which can be read back in to reproduce the data structure. Table data must be tree
+structured and contain only values which can be converted to strings.
 
 Example:
 
@@ -206,20 +231,22 @@ Implements a simple class/object infrastructure. See modules xpm.lua and mpi.lua
 
 *class(cls)*
 
-Converts table _cls_ into a class object and returns it. Objects of this class will have table _cls_ as their metatable,
-so it should contain any required metamethods.
-The table should also contain an entry _name_ specifying the name of the class.
+Parameter _cls_ may be a table or a string.
+If it is a string then a new empty class with the name _cls_ is created and returned.
+If it is a table then the table is converted into a class object and returned. Objects of this class will have
+table _cls_ as their metatable, so it map be initialized with any required metamethods.
+The table _cls_ should also contain an entry _name_ specifying the name of the class.
 This will be returned by the class.type() function.
 
-Methods of class objects should be specified in a sub-table __index. By default the __index table is the same as the
+Methods of class objects are specified in a sub-table __index. By default the __index table is the same as the
 class object, but it can also be explicitly set to a different table to distinguish between class [static] methods
 and object methods.
 
-If the table contains a function entry _init_ then this function will be called when objects of the class are created. 
+If the class contains a function entry _init_ then this function will be called when objects of the class are created. 
 
 After the class has been registered objects of this class can be created by calling the class object. Any parameters
-will be passed to the init function (if any). If a class has no init function then the class object must be called with
-a table as parameter, which will be converted directly into the object.
+will be passed to the init function (if any). If a class has no init function then the class object may be called with
+a table as parameter, which will be converted directly into the object; otherwise a new empty object will be created.
 
 The init function is called with an object of the class as first parameter, followed by all arguments to the call to the
 class object. The first parameter is an empty object unless the first argument of the call is a simple
@@ -382,7 +409,12 @@ Returns true if a < b.
 Sorted pairs. Performs the same function as pairs (but slower of course) except that
 the keys are sorted and optionally filtered. Direction of sorting can be selected.
 By default the keys are sorted using '<'; a different comparison function can be
-supplied.
+supplied. Flags are:
+
+    reverse                   reverse sort order (highest to lowest)
+    numeric                   use numeric sort
+    filter=<func or string>   specify filter as function (only in table) or pattern
+    compare=<func>            specify sort comparison function (only in table)
 
 
 *tabutil.gtable(iter, state, value)*
@@ -418,7 +450,7 @@ The same function as _tabutil.ginline()_, except that the second return value of
 
 *tabutil.ivalues(t)
 
-Returns all values in array t (like ipairs, but without the keys).
+Returns an iterator function which yields all values in array t (like ipairs, but without the keys).
 
 
 
@@ -463,10 +495,19 @@ number it is interpreted as the value of maxdepth. If flags is a boolean then it
 
 Caveat: when using Lua 5.1, iteration over unifications using *pairs()* will not work out of the box, since the
 *\_\_pairs* metamethod is not recognized. To enable iteration over unified tables in Lua 5.1 the global *pairs* function
-should be replaced by the function *tabular.upairs* (\_G.pairs = tabular.upairs).
+should be replaced by the function *tabular.upairs* (\_G.pairs = tabular.upairs). This may still not work if other
+already loaded modules have made an internal copy of the global pairs function.
 
 A function for iterating over all pairs in the unified table can also be obtained by calling the unification with the
 parameter "pairs".
+
+Note that for the purpose of unification objects created by the *geneas.class* module are treated as values rather than tables.
+
+The following flags are defined:
+
+    maxdepth=<num>      maximum depth of sub-unification
+    writable=<boolean>  make unification writable
+    relaxed=<boolean>   optimize unification containing a single table if it is the first table of not writable
 
 Example:
 
@@ -499,19 +540,19 @@ Returns true if v is a unification.
 
 *tabular.istable(v)*
 
-Returns true if v is a table and not NIL.
+Returns true if v is a table and not NIL and not a *geneas.class* object.
 
 
 *tabular.isvalue(v)*
 
-Returns true if v is not a table and not nil.
+Returns true if v is not a table and not nil, or if v is a *geneas.class* object.
 
 
 **Structured Indexing**
 
 *tabular.getfield(t, k)*
 
-Accesses table t using a 'structured' key k. The key is a string consisting of a
+Access table t using a 'structured' key k. The key is a string consisting of a
 concatenation of string keys ".<key>" and numerical keys "[key]".
 
 Thus for example if key = "left[1][2].right" then the value t.left[1][2].right
@@ -521,16 +562,16 @@ is returned.
 
 *tabular.putfield(t, k, v)*
 
-Writes to a table using a 'structured' key as for getfield(). Intermediate tables
+Write to a table using a 'structured' key as for getfield(). Intermediate tables
 are created as required; if an intermediate key exists but is not a table then it
-is replaced with a table.
+is replaced with an empty table before writing the specified value.
 
 
 *tabular.fields(t[, depth[, selector]])*
 
 Returns an array containing the structured keys of all entries in t to the specified
 depth (or no limit if not specified). If a selector is specified then only those keys which match the
-selector are returned. Keys which are neither strings nor numbers are ignored.
+selector pattern are returned. Keys which are neither strings nor numbers are ignored.
 
 
 **Generalized Deep Copy**
@@ -555,6 +596,10 @@ If ctrl is a table then it must be an array of tables which are to be copied by 
 Otherwise, the most general case, ctrl must be a function which is called with the table and the
 current depth as parameters. If the function returns true then the table will be copied by reference,
 otherwise deep-copying will continue.
+
+Note that tabular.NIL and objects created by the *geneas.class* module are considered by *deepcopy* to be
+values and are always copied by reference.
+
 
 
 ### xpm.lua
@@ -586,9 +631,9 @@ Colours may be specified as a string in the usual format '#rrggbb' or '#rgb', or
 An RGB colour table must contain members _r, g, and b_ and optionally _range_. If no range is given then the
 components are assumed to be in the range 0..1, otherwise 0..range.
 
-An HSV colour table must contain members _h, s, v_ and _hsv_=true. Components are in the range 0..1 unless member _range_
+An HSV colour table must contain members _h, s, v_ and _hsv=true_. Components are in the range 0..1 unless member _range_
 is specified as for RGB data. Member _hrange_ may also be specified for hue and overrides the value in _range_.
-Hue values are encoded as 0 = red, 1/3 = green and 2/3 = blue.
+Hue values are encoded cyclically as 0 = red, 1/3 = green and 2/3 = blue.
 
 
 *xpm:open([filename[, width[, height]]])*
@@ -644,7 +689,9 @@ Returns a new mpi object. The value parameter may be any of the following:
 **metamethods:**
 
 Metamethods are defined for tostring, concat and all arithmetic, shift, bit (except '^') and comparison operations,
-and so may be used in the same way as lua numbers in most cases. Under lua 5.3 and later the fractional division
+and so may be used in the same way as lua numbers in most cases. Note that the equality operators '==' and '!=' will
+only work if both operands are mpi objects, unless the __eqval patch has been applied to the Lua interpreter.
+Under lua 5.3 and later the fractional division
 operator '/' (__div) is not allowed by default; only the integer operator '//' (__idiv) is defined.
 This can be overridden via _mpi.setconfig()_ (see below).
 
@@ -765,6 +812,7 @@ _mpi.divrem(a, b)_
 
 The is the same as mpi.divmod called with mode == true.
 
+
 _mpi.isqrt(m)_
 
 Returns the integer square root of a as an mpi object;
@@ -781,6 +829,11 @@ Returns x! as an mpi object. x must be convertible to an mpi object.
 _mpi.read(str, radix)_
 
 Convert str to an mpi object using the specified radix (2..36)
+
+_mpi.tofltstr(m, ndig)_
+
+Convert m to a string in exponential floating point format with the specified number of significant digits.
+
 
 **module configuration:**
 

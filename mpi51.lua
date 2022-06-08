@@ -41,6 +41,7 @@ local char = string.char
 
 local type = _G.type
 local error = _G.error
+local print = _G.print
 local ipairs = _G.ipairs
 local select = _G.select
 local tonumber = _G.tonumber

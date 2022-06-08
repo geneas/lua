@@ -332,4 +332,15 @@ local p = "933262154439441526816992388562667004907159682643816214685929638952175
 assert(n == p)
 assert(f == mpi(p))
 
+-- check for eqval patch
+vprint "check for eqval patch"
+local a = 1
+if mpi(1) == 1 and mpi(1) == a and mpi(2) == a + 1 then
+	print "__eqval patch available"
+elseif mpi(1) ~= 1 and mpi(1) ~= a and mpi(2) ~= a + 1 then
+	vprint "__eqval patch not available"
+else
+	print "__eqval patch faulty"
+end
+
 vprintf("mpi test %sok", decimal and "(decimal mode) " or "")
