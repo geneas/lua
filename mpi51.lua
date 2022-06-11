@@ -641,6 +641,20 @@ local function read(s, radix)
 	return _loadstr(_mpi(), s, radix)
 end
 
+local function uminus(m)
+	local r = _mpi(m)
+	
+	if #m > 0 then r.negative = not r.negative or nil end
+	return r
+end
+
+local function abs(m)
+	local r = _mpi(m)
+	
+	r.negative = nil
+	return r
+end
+
 local function add(m1, m2)
 	if type(m1) == "number" then m1 = _mpi(m1) end
 	if type(m2) == "number" then m2 = _mpi(m2) end
@@ -786,17 +800,24 @@ end
 
 local function pow(m1, m2)
 	if type(m1) == "number" then m1 = _mpi(m1) end
-	
+
 	local expon = type(m2) == "number" and m2 or _tonumber(m2)
 	
-	if expon <= 0 then
+	if expon <= 1 then
 		if expon == 0 then return _mpi(1)
+		elseif expon == 1 then return m1
 		else error "mpi.pow: negative exponent"
 		end
 	end
+	local len = #m1
+	if len == 0 then return m1 end				-- 0^n == 0
 	
 	local odd = (expon % 2) == 1
 	local negative = odd and m1.negative
+	if len == 1 and m1[1] == 1 then
+		return _mpi(negative and -1 or 1)		-- 1^n == 1; (-1)^n == -1 or 1
+	end
+	
 	local acc = m1
 	local r = odd and acc
 	
@@ -812,18 +833,49 @@ local function pow(m1, m2)
 	return r
 end
 
-local function uminus(m)
-	local r = _mpi(m)
+-- (m1 ^ m2) .mod. m3
+local function powm(m1, m2, m3)	
+	local modulus = type(m3) == "number" and _mpi(m3) or m3
+	local negmod = modulus.negative
 	
-	if #m > 0 then r.negative = not r.negative or nil end
-	return r
-end
+	modulus.negative = nil
+	if #modulus == 0 then error "mpi.powm: zero modulus"
+	elseif #modulus == 1 and modulus[1] == 1 then error "mpi.powm: abs(modulus) < 1"
+	end
 
-local function abs(m)
-	local r = _mpi(m)
+	if type(m1) == "number" then m1 = _mpi(m1) end
 	
-	r.negative = nil
-	return r
+	local expon = type(m2) == "number" and m2 or _tonumber(m2)
+	
+	if expon <= 0 then
+		if expon == 0 then return m3 < 0 and 1 - modulus or _mpi(1)
+		else error "mpi.pow: negative exponent"
+		end
+	end
+	local len = #m1
+	if len == 0 then return m1 end				-- 0^n == 0
+	
+	local odd = (expon % 2) == 1
+	local negative = odd and m1.negative
+	if len == 1 and m1[1] == 1 then				-- 1^n or (-1)^n
+		return negative and m3 < 0 and m1
+			or  negative and sub(modulus, 1)
+			or  negmod and sub(1, modulus)
+			or  _mpi(1)
+	end
+	
+	local _, acc = divmod(m1, modulus)
+	local r = odd and acc
+	
+	while expon > 1 do
+		_, acc = divmod(_mul(_mpi(), acc, acc), modulus)
+		expon = floor(expon / 2)
+		if (expon % 2) == 1 then
+			r = r and imod(_mul(_mpi(), r, acc), modulus) or acc
+		end
+	end
+	
+	return negmod and sub(r, modulus) or r
 end
 
 -- bit operations
@@ -1103,6 +1155,7 @@ mpi.add			= add
 mpi.sub			= sub
 mpi.mul			= mul
 mpi.pow			= pow
+mpi.powm			= powm
 mpi.cmp			= cmp
 mpi.neg			= uminus
 mpi.div			= idiv

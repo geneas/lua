@@ -749,6 +749,11 @@ _mpi.pow(a, b)_
 
 Returns a to the power b as an mpi object. a and b may be mpi objects or lua numbers.
 
+_mpi.powm(a, b, m)_
+
+Returns (a to the power b) modulo m as an mpi object. a, b and m may be mpi objects or lua numbers when using
+Lua 5.3 or above. For Lua 5.1 and 5.2, b must be a lua number.
+
 _mpi.eq(a, b)_
 
 Returns true if mpi(a) == mpi(b).

@@ -31,6 +31,18 @@ end
 
 local mpi = require "geneas.mpi"
 
+
+-- check for eqval patch
+vprint "check for eqval patch"
+local a = 1
+if mpi(1) == 1 and mpi(1) == a and a == mpi(1) and mpi(2) == a + 1 then
+	print "__eqval patch installed"
+elseif mpi(1) ~= 1 and mpi(1) ~= a and a ~= mpi(1) and mpi(2) ~= a + 1 then
+	vprint "__eqval patch not installed"
+else
+	print "__eqval patch faulty"
+end
+
 if decimal then
 	mpi.setconfig { setdigit = 0, separator = "" }
 	vprint "decimal mode"
@@ -45,17 +57,25 @@ mpi.setconfig { paranoid = paranoid }
 --
 vprintf "basic operations..."
 
+assert(mpi.eq(mpi"0", mpi(0)))
+assert(mpi"0" == mpi(0))
 assert(mpi"0" == mpi"0")
 assert(mpi"0" >= mpi"0")
 assert(mpi"0" <= mpi"0")
 
+assert(mpi.eq(mpi"1", mpi(1)))
+assert(mpi"1" == mpi(1))
 assert(mpi"1" == mpi"1")
 assert(mpi"1" >= mpi"1")
 assert(mpi"1" <= mpi"1")
 
+assert(mpi.neg(mpi"1") == mpi"-1")
+assert(-mpi"1" == mpi"-1")
 assert(mpi"-1" == mpi"-1")
 assert(mpi"-1" >= mpi"-1")
 assert(mpi"-1" <= mpi"-1")
+
+assert(mpi.abs(mpi"-1") == mpi"1")
 
 assert(mpi"0" ~= mpi"1")
 assert(mpi"0" <= mpi"1")
@@ -194,8 +214,49 @@ assert(mpi"123456789012345678901234567890"  %  mpi"-1000000000000" == mpi"-98765
 assert(mpi"-123456789012345678901234567890" // mpi"-1000000000000" == mpi"123456789012345678")
 assert(mpi"-123456789012345678901234567890" %  mpi"-1000000000000" == mpi"-901234567890")
 
+-- gcd function
 assert(mpi.gcd(mpi"42974421648399971543934526365", mpi"57278086103139504076052") == mpi"123645217")
 
+-- exponentiation
+assert(mpi(2) ^ 100 == mpi"1267650600228229401496703205376")
+assert(2 ^ mpi(100) == mpi"1267650600228229401496703205376")
+
+-- modulo exponentiation
+assert(mpi.powm(2, 1000, 1000000000000) == mpi(205668069376))
+assert(mpi.powm(2, 100000000000000, 1000000000000000) == mpi(740081787109376))
+assert(mpi.powm(2, 9223372036854775807, mpi"1000000000000000000000000000000") == mpi"146098915510647986015728304128")
+assert(mpi.powm(2, mpi"9223372036854775807", mpi"1000000000000000000000000000000") == mpi"146098915510647986015728304128")
+assert(mpi.powm(2, mpi"9223372036854775808", mpi"1000000000000000000000000000000") == mpi"292197831021295972031456608256")
+assert(mpi.powm(2, mpi"1000000000000000000000000000", mpi"1000000000000000000000000000000") == mpi"853380022607743740081787109376")
+
+-- exponentiation corner cases
+assert(mpi.pow(0, 0) == mpi"1")
+assert(mpi.pow(0, 1) == mpi"0")
+assert(mpi.pow(1, 0) == mpi"1")
+assert(mpi.pow(1, 1) == mpi"1")
+assert(mpi.pow(1, 2) == mpi"1")
+assert(mpi.pow(-1, 0) == mpi"1")
+assert(mpi.pow(-1, 1) == mpi"-1")
+assert(mpi.pow(-1, 2) == mpi"1")
+
+assert(mpi.powm(0, 0, 10) == mpi"1")
+assert(mpi.powm(0, 1, 10) == mpi"0")
+assert(mpi.powm(1, 0, 10) == mpi"1")
+assert(mpi.powm(1, 1, 10) == mpi"1")
+assert(mpi.powm(1, 2, 10) == mpi"1")
+assert(mpi.powm(-1, 0, 10) == mpi"1")
+assert(mpi.powm(-1, 1, 10) == mpi"9")
+assert(mpi.powm(-1, 2, 10) == mpi"1")
+assert(mpi.powm(0, 0, -10) == mpi"-9")
+assert(mpi.powm(0, 1, -10) == mpi"0")
+assert(mpi.powm(1, 0, -10) == mpi"-9")
+assert(mpi.powm(1, 1, -10) == mpi"-9")
+assert(mpi.powm(1, 2, -10) == mpi"-9")
+assert(mpi.powm(-1, 0, -10) == mpi"-9")
+assert(mpi.powm(-1, 1, -10) == mpi"-1")
+assert(mpi.powm(-1, 2, -10) == mpi"-9")
+
+-- bit operations
 if mpi.getconfig().unit == 2 then
 	assert(mpi"0x333333333333333333333333" & mpi"0x666666666666666666666666" == mpi"0x222222222222222222222222")
 	assert(mpi"0x333333333333333333333333" | mpi"0x555555555555555555555555" == mpi"0x777777777777777777777777")
@@ -331,16 +392,5 @@ local n = tostring(f)
 local p = "93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000"
 assert(n == p)
 assert(f == mpi(p))
-
--- check for eqval patch
-vprint "check for eqval patch"
-local a = 1
-if mpi(1) == 1 and mpi(1) == a and mpi(2) == a + 1 then
-	print "__eqval patch available"
-elseif mpi(1) ~= 1 and mpi(1) ~= a and mpi(2) ~= a + 1 then
-	vprint "__eqval patch not available"
-else
-	print "__eqval patch faulty"
-end
 
 vprintf("mpi test %sok", decimal and "(decimal mode) " or "")

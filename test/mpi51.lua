@@ -15,11 +15,13 @@ require "geneas.dprint"
 
 local args = {}
 local interactive
+local paranoid = true
 local decimal
-for opt, par, err in getopt(arg, "vzid", true) do
+for opt, par, err in getopt(arg, "vzidp", true) do
 	if opt == true then table.insert(args, par)
 	elseif opt == "d" then decimal = true
 	elseif opt == "i" then interactive = true
+	elseif opt == "p" then paranoid = not paranoid
 	elseif opt == "v" then verbose = true
 	elseif opt == "z" then debug_level = debug_level + 1
 	else error "invalid option"
@@ -36,24 +38,32 @@ if decimal then
 	cfg = mpi.getconfig()
 	assert(cfg.unit == 10)
 end
-mpi.setconfig { paranoid = true }
+mpi.setconfig { paranoid = paranoid }
 
 
 -- verify basics
 --
 vprintf "basic operations..."
 
+assert(mpi.eq(mpi"0", mpi(0)))
+assert(mpi"0" == mpi(0))
 assert(mpi"0" == mpi"0")
 assert(mpi"0" >= mpi"0")
 assert(mpi"0" <= mpi"0")
 
+assert(mpi.eq(mpi"1", mpi(1)))
+assert(mpi"1" == mpi(1))
 assert(mpi"1" == mpi"1")
 assert(mpi"1" >= mpi"1")
 assert(mpi"1" <= mpi"1")
 
+assert(mpi.neg(mpi"1") == mpi"-1")
+assert(-mpi"1" == mpi"-1")
 assert(mpi"-1" == mpi"-1")
 assert(mpi"-1" >= mpi"-1")
 assert(mpi"-1" <= mpi"-1")
+
+assert(mpi.abs(mpi"-1") == mpi"1")
 
 assert(mpi"0" ~= mpi"1")
 assert(mpi"0" <= mpi"1")
@@ -192,7 +202,45 @@ assert(mpi"123456789012345678901234567890"  %  mpi"-1000000000000" == mpi"-98765
 assert(mpi"-123456789012345678901234567890" / mpi"-1000000000000" == mpi"123456789012345678")
 assert(mpi"-123456789012345678901234567890" %  mpi"-1000000000000" == mpi"-901234567890")
 
+-- gcd function
 assert(mpi.gcd(mpi"42974421648399971543934526365", mpi"57278086103139504076052") == mpi"123645217")
+
+-- exponentiation
+assert(mpi(2) ^ 100 == mpi"1267650600228229401496703205376")
+assert(2 ^ mpi(100) == mpi"1267650600228229401496703205376")
+
+-- modulo exponentiation
+assert(mpi.powm(2, 1000, 1000000000000) == mpi(205668069376))
+assert(mpi.powm(2, 100000000000000, 1000000000000000) == mpi(740081787109376))
+assert(mpi.powm(2, 4503599627370495, mpi"1000000000000000000000000000000") == mpi"798377082189505604533950087168")
+assert(mpi.powm(2, mpi"4503599627370495", mpi"1000000000000000000000000000000") == mpi"798377082189505604533950087168")
+
+-- exponentiation corner cases
+assert(mpi.pow(0, 0) == mpi"1")
+assert(mpi.pow(0, 1) == mpi"0")
+assert(mpi.pow(1, 0) == mpi"1")
+assert(mpi.pow(1, 1) == mpi"1")
+assert(mpi.pow(1, 2) == mpi"1")
+assert(mpi.pow(-1, 0) == mpi"1")
+assert(mpi.pow(-1, 1) == mpi"-1")
+assert(mpi.pow(-1, 2) == mpi"1")
+
+assert(mpi.powm(0, 0, 10) == mpi"1")
+assert(mpi.powm(0, 1, 10) == mpi"0")
+assert(mpi.powm(1, 0, 10) == mpi"1")
+assert(mpi.powm(1, 1, 10) == mpi"1")
+assert(mpi.powm(1, 2, 10) == mpi"1")
+assert(mpi.powm(-1, 0, 10) == mpi"1")
+assert(mpi.powm(-1, 1, 10) == mpi"9")
+assert(mpi.powm(-1, 2, 10) == mpi"1")
+assert(mpi.powm(0, 0, -10) == mpi"-9")
+assert(mpi.powm(0, 1, -10) == mpi"0")
+assert(mpi.powm(1, 0, -10) == mpi"-9")
+assert(mpi.powm(1, 1, -10) == mpi"-9")
+assert(mpi.powm(1, 2, -10) == mpi"-9")
+assert(mpi.powm(-1, 0, -10) == mpi"-9")
+assert(mpi.powm(-1, 1, -10) == mpi"-1")
+assert(mpi.powm(-1, 2, -10) == mpi"-9")
 
 if mpi.getconfig().unit == 2 then
 	if mpi.getconfig().bitops then -- bit operations may not be supported for lua 5.1

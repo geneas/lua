@@ -83,7 +83,7 @@ diff -ru lua-5.4.4/src/lvm.c lua-5.4.4.mod/src/lvm.c
 +** Equality of Lua values of differing type variants; return 't1 == t2'.
 +*/
 +static int luaV_EQval (lua_State *L, const TValue *t1, const TValue *t2) {
-+  const TValue *tm;
++  const TValue *tm = NULL;
 +  switch (ttypetag(t1)) {
 +    case LUA_VUSERDATA:
 +      tm = fasttm(L, uvalue(t1)->metatable, TM_EQVAL);
@@ -92,7 +92,7 @@ diff -ru lua-5.4.4/src/lvm.c lua-5.4.4.mod/src/lvm.c
 +      tm = fasttm(L, hvalue(t1)->metatable, TM_EQVAL);
 +      break;  /* will try TM */
 +    default:
-+      return 0;
++      break;
 +  }
 +  if (tm == NULL) {
 +    switch (ttypetag(t2)) {
