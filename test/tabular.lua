@@ -31,6 +31,8 @@ end
 local concat = table.concat
 local sort = table.sort
 
+local loadstr = _VERSION:match"Lua 5.1" and loadstring or load
+
 if _VERSION:match"Lua 5%.[12]" then
 	--
 	-- for lua < 5.3 install a 'pairs' function which can iterate over unifications
@@ -281,5 +283,53 @@ local xs = ""
 dump(x3, {seq=true, flat=true, writer=function(s) xs = xs .. s end})
 assert(xs == cs)
 
+-- tabular.export
+-----------------
+dprint"\nexport:"
+x1 = "abc"
+x2 = 4
+-- tree:
+x3 = { 1, "two", three = { "sub", [4] = {{77}, [{8}] = 9}}}
+-- DAG:
+x4 = { 9, 10, x3, { 11, { x3 }}}
+-- with loops:
+x51 = { 21, { a = x3 }}
+x52 = { 22, { b = x4, c = x51 }}
+x5 = { 23, { x52, {{ x51 }}}}
+x51[3] = x52
+
+-- complex with metatable and key references
+xa = { "a", { "a2" }}
+xb = { "b", { "b2" }}
+xc = { "c" }
+xd = { "d", { "d1", d22 = xb, d23 = xc }}
+xe = { "e", xd, e3 = { "e3", [xc] = 7, e33 = { "e33", [xa] = { "e332", xb }}}}
+xf = { "f", nil, 77, { "f4", xa }}
+xg = { "g", {"g2", setmetatable({ "g22", xf }, xa)}}
+x6 = { "x", { "x2", { "x22", xg, setmetatable({ "x223", xe }, xd) }, { "x224", xe, { "x2243", xd, "tab\tline\nbreak", xb }}}}
+
+xf["end"] = xg
+xc.c2 = xd
+xe[xb] = x6
+setmetatable(xb, xe)
+setmetatable(xc, xa)
+
+local function test_export(x)
+	local s = tabular.export(x, "pretty")
+	--print(s)
+	local y = loadstr("return " .. s)()
+	local v = tabular.export(y, "pretty")
+	if v ~= s then
+		print("export failed: " .. v)
+		d3dump(y)
+	end
+end
+
+test_export(x1)
+test_export(x2)
+test_export(x3)
+test_export(x4)
+test_export(x5)
+test_export(x6)
 
 vprint "test tabular ok"

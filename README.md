@@ -13,8 +13,9 @@ if the value of debug_level is 2 or greater. The function dprint generates outpu
 
 In addition, a global function printf is installed which prints the output of string.format. A
 similar family of d[n]printf functions is also installed which check the value of debug_level.
-Finally the global functions vprint and vprintf are installed which only generate output if the
-global boolean variable 'verbose' tests true.
+Global functions vprint and vprintf are installed which only generate output if the
+global boolean variable 'verbose' tests true; similarly qprint and qprintf generate output only if
+the global variable 'quiet' tests false.
 
 An optional header can be defined by setting the global string variable debug_header. This header
 can include escape sequences as defined for os.date(), or %? for the current value of debug_level
@@ -23,6 +24,8 @@ or %@ for the minimum level of the dprint call (ie 2 for d2print etc).
 Output is generated via io.stdout:write(), unless a global function debug_writer has been
 defined, in which case this function is called with the formatted output instead. Each call to any
 of the print functions results in a single call to the output function.
+
+All global variables can also be accessed via the set/get functions described below.
 
 *setDebugLevel(n)*
 
@@ -48,6 +51,34 @@ Set verbose flag to t (default true)
 
 Returns current verbose setting (true or false) (same as _G.verbose)
 
+*setQuiet(t)*
+
+Set quiet flag to t (default true)
+
+*getQuiet()*
+
+Returns current quiet setting (true or false) (same as _G.quiet)
+
+*setDebugWriter(f)*
+
+Set the current writer function in _G.debug_writer.
+
+*getDebugWriter*
+
+Returns the current debug writer function (same as _G.debug_writer)
+
+*setDebugHeader(s)*
+
+Set the current debug header in _G.debug_header.
+
+*getDebugHeader*
+
+Returns the current debug header string (same as _G.debug_header)
+
+*printf(n, fmt, ...)*
+
+Print args (formatted) and newline
+
 *d*__n__*print(...)*
 
 Print args (tab separated) and newline if current debug level >= **n**
@@ -71,6 +102,30 @@ Print args (tab separated) and newline if verbose setting is true
 *vprintf(fmt, ...)*
 
 Print args (formatted) and newline if verbose setting is true
+
+*vdprint(...)*
+
+Print args (tab separated) and newline if verbose setting is true _or_ debug level > 0
+
+*vdprintf(fmt, ...)*
+
+Print args (formatted) and newline if verbose setting is true _or_ debug level > 0
+
+*qprint(...)*
+
+Print args (tab separated) and newline if quiet setting is false
+
+*qprintf(fmt, ...)*
+
+Print args (formatted) and newline if quiet setting is false
+
+*qdprint(...)*
+
+Print args (tab separated) and newline if quiet setting is false _or_ debug level > 0
+
+*qdprintf(fmt, ...)*
+
+Print args (formatted) and newline if quiet setting is false _or_ debug level > 0
 
 
 ### dump.lua
@@ -340,6 +395,11 @@ Returns f(t[1], f(t[2], f(... f(t[n], r)...).
 Returns a new array containing all elements t[i] of t for which f(t[i]) tests true.
 
 
+*tabutil.reverse(t)*
+
+Returns a new array containing all elements of t in reverse order.
+
+
 *tabutil.take(t, n)*
 
 Returns an array containing the first _n_ elements of t.
@@ -362,6 +422,11 @@ Rotate all elements of _t n_ places to the left (towards lower indices) and retu
 Example:
 
     tabutil.rotate({1, 2, 3, 4, 5, 6, 7}, 2) -> {3, 4, 5, 6, 7, 1, 2}
+
+
+*tabutil.append(t1, t2)
+
+Appends all elements of t2 to t1 and returns t1.
 
 
 **Complex functions:**
@@ -600,6 +665,32 @@ otherwise deep-copying will continue.
 
 Note that tabular.NIL and objects created by the *geneas.class* module are considered by *deepcopy* to be
 values and are always copied by reference.
+
+
+**Export of Arbitrary Structure**
+
+*tabular.export(v, flags)*
+
+Generates a Lua expression or loadable string which, when executed, yields a structure identical in form
+to the input value _v_. Elements of the structure may be booleans, numbers, strings and tables.
+
+Values of type userdata and objects created by the _geneas.class_ module are also handled if they provide
+a member function _export_ to be called via <object>:export(). Functions and other values are converted by
+calling tostring(), which may or may not give a sensible result.
+
+This function attempts to express the structure in the shortest possible form. Scalars and tree-structured
+tables are expressed in a single expression. If there are multiple references to nested tables then these tables
+are assigned to local variables before the top-level structure is built. If cycles (loops) are present then
+the cyclic references are made by assignments after the top-level structure has been built.
+
+The _flags_ parameter may be a table of key-value pairs or a string of comma-separated flag specifications.
+
+By default an expression is generated which yields the required structure. If local variables or assignments
+are required then a function containing the required code is defined and then called.
+If option flag 'load' is specified then instead a loadable string is generated. In the simple case this just
+prepends the expression with 'return'. In the complex case the enclosing function and call are omitted.
+If the option flag 'pretty' is specified then multiple statements of a complex structure are placed on
+separate lines.
 
 
 

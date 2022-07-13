@@ -38,6 +38,12 @@ function _G.decDebugLevel() _G.debug_level = max(0, _G.debug_level - 1) end
 function _G.getDebugLevel() return _G.debug_level end
 function _G.setVerbose(t) _G.verbose = type(t) ~= "boolean" or t end
 function _G.getVerbose() return _G.verbose end
+function _G.setQuiet(t) _G.quiet = type(t) ~= "boolean" or t end
+function _G.getQuiet() return _G.quiet end
+function _G.setDebugWriter(w) if type(w) == "string" then _G.debug_writer = _G[w] else _G.debug_writer = w end end
+function _G.getDebugWriter() return _G.debug_writer end
+function _G.setDebugHeader(h) _G.debug_header = h end
+function _G.getDebugHeader() return _G.debug_header end
 
 local function _print(...)
 	local out = {}
@@ -130,6 +136,14 @@ _G.dprintf = _G.d1printf
 -- verbose fns
 function _G.vprint(...)	if _G.verbose then _print(...) end end
 function _G.vprintf(s, ...) if _G.verbose then _printf(s, ...) end end
+function _G.vdprint(...)	if _G.verbose or _G.debug_level > 0 then _print(...) end end
+function _G.vdprintf(s, ...) if _G.verbose or _G.debug_level > 0 then _printf(s, ...) end end
+
+-- quiet fns
+function _G.qprint(...)	if not _G.quiet then _print(...) end end
+function _G.qprintf(s, ...) if not _G.quiet then _printf(s, ...) end end
+function _G.qdprint(...)	if not _G.quiet or _G.debug_level > 0 then _print(...) end end
+function _G.qdprintf(s, ...) if not _G.quiet or _G.debug_level > 0 then _printf(s, ...) end end
 
 -- error fn
 function _G.errorf(s, ...) error(format(s, ...)) end

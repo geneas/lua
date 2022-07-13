@@ -59,6 +59,15 @@ local function classof(obj)
 	return mt and (mt == class or getmetatable(mt) == class) and mt or nil
 end
 
+local function iskindof(obj, cls)
+	if cls then
+		local c = classof(obj)
+	
+		return c and c == cls or iskindof(obj, c.super)
+	end
+	return false
+end
+
 local function objtype(obj)
 	local c = classof(obj)
 
@@ -112,19 +121,47 @@ local function newobject(cls, p, ...)
 	end
 end
 
+-- inheritance by template:
+-- copy in methods of superclass which are not already defined.
+--
+-- caveat: if cls & super do not make the same distinction between
+-- class & object methods then the child class will inherit all of
+-- the super class methods as both class & object methods.
+--
+local function extends(cls, super)
+	-- copy class methods
+	for k, v in pairs(super) do
+		if not cls[k] then cls[k] = v end
+	end
+	
+	-- copy object methods
+	if not rawequal(cls.__index, cls) then
+		for k, v in pairs(super.__index) do
+			if not cls.__index[k] then cls.__index[k] = v end
+		end
+	elseif not rawequal(super.__index, super) then
+		for k, v in pairs(super.__index) do
+			if not cls[k] then cls[k] = v end
+		end
+	end
+	
+	cls.super = super
+	return cls
+end
+
+
 local classmeta = {
-	__call = newclass,
---	__index = { new = newclass }			-- class:new() = class()
+	__call = newclass,						-- class() -> new class
 }
 classmeta.__metatable = classmeta		-- lock metatable
 
 
 class.classof = classof
+class.iskindof = iskindof
 class.type = objtype
 
 class.name = "class"
-class.__call = newobject
---class.__index = { new = newobject }		-- <class>:new() = <class>()
+class.__call = newobject					-- <class>() -> new object
 class.__metatable = class					-- lock metatable
 
 return setmetatable(class, classmeta)

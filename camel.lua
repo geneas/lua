@@ -11,11 +11,6 @@
 |                                                                          |
 ]]--------------------------------------------------------------------------
 
-local coroutine = require "coroutine"
-local string = require "string"
-local table = require "table"
-
-local _G = _G
 local camel = {}
 if _VERSION:match"Lua 5%.[12]" then
 	module "camel"

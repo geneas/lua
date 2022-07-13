@@ -1,7 +1,7 @@
 #! /usr/bin/env lua
 --[[-%tabs=3----------------------------------------------------------------
 |                                                                          |
-|  Module:     mpi.lua                                                     |
+|  Module:     mpi.lua (Lua 5.1/5.2 version)                               |
 |  Function:   Multiprecision Integer Arithmetic in pure lua               |
 |                                                                          |
 |  Copyright(c) 2019-2022 Andrew Cannon <ajc@gmx.net>                      |
@@ -70,6 +70,7 @@ if _VERSION:match"Lua 5%.[12]" then
 	module "mpi"
 	mpi = _G.mpi
 end
+mpi.name = "mpi"
 
 local MAXBITS = 26	-- max binary units (bits) per mpi digit
 local MAXDECS = 7		-- max decimal units (decimal digits) per mpi digit
@@ -637,9 +638,89 @@ end
 
 -------------------------------------
 
-local function read(s, radix)
-	return _loadstr(_mpi(), s, radix)
+-- bit operations
+
+local function band(m1, m2)
+	if type(m1) == "number" then m1 = _mpi(m1) end
+	if type(m2) == "number" then m2 = _mpi(m2) end
+	
+	local r = _mpi(m1.negative and m2.negative)
+	
+	for i = 1, min(#m1, #m2) do
+		r[i] = _band(m1[i], m2[i])
+	end
+	return _trim(r)
 end
+
+local function bor(m1, m2)
+	if type(m1) == "number" then m1 = _mpi(m1) end
+	if type(m2) == "number" then m2 = _mpi(m2) end
+	
+	local r = _mpi(m1.negative or m2.negative)
+	
+	for i = 1, max(#m1, #m2) do
+		r[i] = _bor((m1[i] or 0), (m2[i] or 0))
+	end
+	return r
+end
+
+local function bxor(m1, m2)
+	if type(m1) == "number" then m1 = _mpi(m1) end
+	if type(m2) == "number" then m2 = _mpi(m2) end
+	
+	local r = _mpi(m1.negative)
+	
+	if m2.negative then r.negative = not r.negative or nil end
+	for i = 1, max(#m1, #m2) do
+		r[i] = _bxor((m1[i] or 0), (m2[i] or 0))
+	end
+	return _trim(r)
+end
+
+-- note:
+-- there is no bnot() operation as it would have to return an infinite
+--	number of bits! use bxor with inversion mask of appropriate length.
+
+-- shifts
+
+local function shr(m1, m2)
+	if type(m1) == "number" then m1 = _mpi(m1) end
+	
+	return _shift(_mpi(m1), type(m2) == "number" and m2 or _tonumber(m2))
+end
+
+local function shl(m1, m2)
+	if type(m1) == "number" then m1 = _mpi(m1) end
+	
+	return _shift(_mpi(m1), -(type(m2) == "number" and m2 or _tonumber(m2)))
+end
+
+-- comparisons
+
+local function eq(m1, m2)
+	if type(m1) == "number" then m1 = _mpi(m1) end
+	if type(m2) == "number" then m2 = _mpi(m2) end
+	
+	return not m1.negative == not m2.negative and _cmp(m1, m2) == 0
+end
+
+local function lt(m1, m2)
+	if type(m1) == "number" then m1 = _mpi(m1) end
+	if type(m2) == "number" then m2 = _mpi(m2) end
+	
+	if m1.negative then return not m2.negative or _cmp(m1, m2) > 0
+	else return not m2.negative and _cmp(m1, m2) < 0
+	end
+end
+
+local function gt(m1, m2) return lt(m2, m1) end
+local function ge(m1, m2) return not lt(m1, m2) end
+local function le(m1, m2) return not gt(m1, m2) end
+local function ne(m1, m2) return not eq(m1, m2) end
+
+-------------------------------------
+
+-- arithmetic operations
 
 local function uminus(m)
 	local r = _mpi(m)
@@ -648,7 +729,7 @@ local function uminus(m)
 	return r
 end
 
-local function abs(m)
+local function iabs(m)
 	local r = _mpi(m)
 	
 	r.negative = nil
@@ -798,7 +879,7 @@ local function imod(m1, m2)
 	return select(2, divmod(m1, m2))
 end
 
-local function pow(m1, m2)
+local function ipow(m1, m2)
 	if type(m1) == "number" then m1 = _mpi(m1) end
 
 	local expon = type(m2) == "number" and m2 or _tonumber(m2)
@@ -849,7 +930,7 @@ local function powm(m1, m2, m3)
 	
 	if expon <= 0 then
 		if expon == 0 then return m3 < 0 and 1 - modulus or _mpi(1)
-		else error "mpi.pow: negative exponent"
+		else error "mpi.powm: negative exponent"
 		end
 	end
 	local len = #m1
@@ -878,85 +959,16 @@ local function powm(m1, m2, m3)
 	return negmod and sub(r, modulus) or r
 end
 
--- bit operations
+-- conversions
 
-local function band(m1, m2)
-	if type(m1) == "number" then m1 = _mpi(m1) end
-	if type(m2) == "number" then m2 = _mpi(m2) end
-	
-	local r = _mpi(m1.negative and m2.negative)
-	
-	for i = 1, min(#m1, #m2) do
-		r[i] = _band(m1[i], m2[i])
-	end
-	return _trim(r)
+local function read(s, radix)
+	return _loadstr(_mpi(), s, radix)
 end
 
-local function bor(m1, m2)
-	if type(m1) == "number" then m1 = _mpi(m1) end
-	if type(m2) == "number" then m2 = _mpi(m2) end
-	
-	local r = _mpi(m1.negative or m2.negative)
-	
-	for i = 1, max(#m1, #m2) do
-		r[i] = _bor((m1[i] or 0), (m2[i] or 0))
-	end
-	return r
+local function export(m)
+	if classof(m) ~= _mpi then return tostring(m) end
+	return "mpi(" .. tostring(m) .. ")"
 end
-
-local function bxor(m1, m2)
-	if type(m1) == "number" then m1 = _mpi(m1) end
-	if type(m2) == "number" then m2 = _mpi(m2) end
-	
-	local r = _mpi(m1.negative)
-	
-	if m2.negative then r.negative = not r.negative or nil end
-	for i = 1, max(#m1, #m2) do
-		r[i] = _bxor((m1[i] or 0), (m2[i] or 0))
-	end
-	return _trim(r)
-end
-
--- note:
--- there is no bnot() operation as it would have to return an infinite
---	number of bits! use bxor with inversion mask of appropriate length.
-
--- shifts
-
-local function shr(m1, m2)
-	if type(m1) == "number" then m1 = _mpi(m1) end
-	
-	return _shift(_mpi(m1), type(m2) == "number" and m2 or _tonumber(m2))
-end
-
-local function shl(m1, m2)
-	if type(m1) == "number" then m1 = _mpi(m1) end
-	
-	return _shift(_mpi(m1), -(type(m2) == "number" and m2 or _tonumber(m2)))
-end
-
--- comparisons
-
-local function eq(m1, m2)
-	if type(m1) == "number" then m1 = _mpi(m1) end
-	if type(m2) == "number" then m2 = _mpi(m2) end
-	
-	return not m1.negative == not m2.negative and _cmp(m1, m2) == 0
-end
-
-local function lt(m1, m2)
-	if type(m1) == "number" then m1 = _mpi(m1) end
-	if type(m2) == "number" then m2 = _mpi(m2) end
-	
-	if m1.negative then return not m2.negative or _cmp(m1, m2) > 0
-	else return not m2.negative and _cmp(m1, m2) < 0
-	end
-end
-
-local function gt(m1, m2) return lt(m2, m1) end
-local function ge(m1, m2) return not lt(m1, m2) end
-local function le(m1, m2) return not gt(m1, m2) end
-local function ne(m1, m2) return not eq(m1, m2) end
 
 -- queries
 --
@@ -1041,7 +1053,7 @@ local function tofltstr(m, ndig)
 		expon = sigplaces(m) - 1
 	end
 		
-	local tens = pow(10, expon)
+	local tens = ipow(10, expon)
 		
 	-- ensure estimate is in range m/10 < tens <= m
 	while tens > m do
@@ -1108,6 +1120,7 @@ local methods = {
 	tonumber		= _tonumber,
 	tostring		= _tostring,
 	tofltstr		= tofltstr,
+	export		= export,
 
 	length		= function(m) return #m end,
 	sigplaces	= sigplaces,
@@ -1121,7 +1134,7 @@ mpi.__sub		= sub
 mpi.__mul		= mul
 mpi.__div		= idiv
 mpi.__mod		= imod
-mpi.__pow		= pow
+mpi.__pow		= ipow
 
 mpi.__unm		= uminus
 
@@ -1154,7 +1167,7 @@ mpi.read			= read
 mpi.add			= add
 mpi.sub			= sub
 mpi.mul			= mul
-mpi.pow			= pow
+mpi.pow			= ipow
 mpi.powm			= powm
 mpi.cmp			= cmp
 mpi.neg			= uminus
@@ -1173,7 +1186,7 @@ mpi.bor			= bor
 mpi.bxor			= bxor
 mpi.shl			= shl
 mpi.shr			= shr
-mpi.abs			= abs
+mpi.abs			= iabs
 mpi.isqrt		= isqrt
 mpi.gcd			= gcd
 mpi.factorial	= factorial
